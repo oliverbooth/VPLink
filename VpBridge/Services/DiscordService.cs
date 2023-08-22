@@ -1,4 +1,4 @@
-﻿using System.Reactive.Linq;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text.RegularExpressions;
 using Discord;
@@ -94,7 +94,7 @@ internal sealed partial class DiscordService : BackgroundService, IDiscordServic
         string escaped = EscapeRegex.Replace(unescaped, "\\$1");
 
         string displayName = author.Name;
-        return channel.SendMessageAsync($"{displayName}: {escaped}");
+        return channel.SendMessageAsync($"**{displayName}**: {escaped}");
     }
 
     [GeneratedRegex(@"\\(\*|_|`|~|\\)", RegexOptions.Compiled)]
