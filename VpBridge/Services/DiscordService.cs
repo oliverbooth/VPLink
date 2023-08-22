@@ -1,11 +1,13 @@
 ﻿using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Text;
 using System.Text.RegularExpressions;
 using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using VpSharp;
 using VpSharp.Entities;
 
 namespace VpBridge.Services;
@@ -19,6 +21,7 @@ internal sealed partial class DiscordService : BackgroundService, IDiscordServic
     private readonly ILogger<DiscordService> _logger;
     private readonly IConfiguration _configuration;
     private readonly DiscordSocketClient _discordClient;
+    private readonly VirtualParadiseClient _virtualParadiseClient;
     private readonly Subject<IUserMessage> _messageReceived = new();
 
     /// <summary>
@@ -27,13 +30,16 @@ internal sealed partial class DiscordService : BackgroundService, IDiscordServic
     /// <param name="logger">The logger.</param>
     /// <param name="configuration">The configuration.</param>
     /// <param name="discordClient">The Discord client.</param>
+    /// <param name="virtualParadiseClient">The Virtual Paradise client.</param>
     public DiscordService(ILogger<DiscordService> logger,
         IConfiguration configuration,
-        DiscordSocketClient discordClient)
+        DiscordSocketClient discordClient,
+        VirtualParadiseClient virtualParadiseClient)
     {
         _logger = logger;
         _configuration = configuration;
         _discordClient = discordClient;
+        _virtualParadiseClient = virtualParadiseClient;
     }
 
     /// <inheritdoc />
@@ -50,6 +56,29 @@ internal sealed partial class DiscordService : BackgroundService, IDiscordServic
 
             if (message.Channel.Id != _configuration.GetSection("Discord:ChannelId").Get<ulong>())
                 return Task.CompletedTask;
+
+            if (message.Content.Equals("!who"))
+            {
+                VirtualParadiseAvatar[] avatars = _virtualParadiseClient.Avatars.Where(a => !a.IsBot).ToArray();
+                int count = avatars.Length;
+
+                if (count > 0)
+                {
+                    var builder = new StringBuilder();
+                    builder.AppendLine("**Users In World 🌎**");
+                    foreach (VirtualParadiseAvatar avatar in _virtualParadiseClient.Avatars)
+                    {
+                        if (avatar.IsBot || avatar == _virtualParadiseClient.CurrentAvatar)
+                            continue;
+
+                        builder.AppendLine($"• {avatar.Name}");
+                    }
+
+                    return message.ReplyAsync(builder.ToString());
+                }
+
+                return message.ReplyAsync("**No Users In World 🚫**");
+            }
 
             _messageReceived.OnNext(message);
             return Task.CompletedTask;
@@ -94,7 +123,7 @@ internal sealed partial class DiscordService : BackgroundService, IDiscordServic
         string escaped = EscapeRegex.Replace(unescaped, "\\$1");
 
         string displayName = author.Name;
-        return channel.SendMessageAsync($"{displayName}: {escaped}");
+        return channel.SendMessageAsync($"**{displayName}**: {escaped}");
     }
 
     [GeneratedRegex(@"\\(\*|_|`|~|\\)", RegexOptions.Compiled)]
