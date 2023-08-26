@@ -3,7 +3,6 @@ using System.Reactive.Subjects;
 using Discord;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using VPLink.Configuration;
 using VpSharp;
 using VpSharp.Entities;
 using Color = System.Drawing.Color;
@@ -18,8 +17,6 @@ internal sealed class VirtualParadiseService : BackgroundService, IVirtualParadi
     private readonly IConfigurationService _configurationService;
     private readonly VirtualParadiseClient _virtualParadiseClient;
     private readonly Subject<VirtualParadiseMessage> _messageReceived = new();
-    private readonly Subject<VirtualParadiseAvatar> _avatarJoined = new();
-    private readonly Subject<VirtualParadiseAvatar> _avatarLeft = new();
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="VirtualParadiseService" /> class.
@@ -35,12 +32,6 @@ internal sealed class VirtualParadiseService : BackgroundService, IVirtualParadi
         _configurationService = configurationService;
         _virtualParadiseClient = virtualParadiseClient;
     }
-
-    /// <inheritdoc />
-    public IObservable<VirtualParadiseAvatar> OnAvatarJoined => _avatarJoined.AsObservable();
-
-    /// <inheritdoc />
-    public IObservable<VirtualParadiseAvatar> OnAvatarLeft => _avatarJoined.AsObservable();
 
     /// <inheritdoc />
     public IObservable<VirtualParadiseMessage> OnMessageReceived => _messageReceived.AsObservable();
@@ -69,8 +60,6 @@ internal sealed class VirtualParadiseService : BackgroundService, IVirtualParadi
     {
         _logger.LogInformation("Establishing relay");
         _virtualParadiseClient.MessageReceived.Subscribe(_messageReceived);
-        _virtualParadiseClient.AvatarJoined.Subscribe(OnVirtualParadiseAvatarJoined);
-        _virtualParadiseClient.AvatarLeft.Subscribe(OnVirtualParadiseAvatarLeft);
 
         VirtualParadiseConfiguration configuration = _configurationService.VirtualParadiseConfiguration;
 
@@ -85,29 +74,5 @@ internal sealed class VirtualParadiseService : BackgroundService, IVirtualParadi
 
         _logger.LogInformation("Entering world {World}", world);
         await _virtualParadiseClient.EnterAsync(world).ConfigureAwait(false);
-    }
-
-    private void OnVirtualParadiseAvatarJoined(VirtualParadiseAvatar avatar)
-    {
-        BotConfiguration configuration = _configurationService.BotConfiguration;
-
-        if (!configuration.AnnounceAvatarEvents || avatar.IsBot && !configuration.AnnounceBots)
-        {
-            return;
-        }
-
-        _avatarJoined.OnNext(avatar);
-    }
-
-    private void OnVirtualParadiseAvatarLeft(VirtualParadiseAvatar avatar)
-    {
-        BotConfiguration configuration = _configurationService.BotConfiguration;
-
-        if (!configuration.AnnounceAvatarEvents || avatar.IsBot && !configuration.AnnounceBots)
-        {
-            return;
-        }
-
-        _avatarLeft.OnNext(avatar);
     }
 }

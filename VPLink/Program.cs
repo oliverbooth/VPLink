@@ -34,6 +34,7 @@ builder.Services.AddSingleton(new DiscordSocketConfig
     GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.MessageContent
 });
 
+builder.Services.AddHostedSingleton<IAvatarService, AvatarService>();
 builder.Services.AddHostedSingleton<IVirtualParadiseService, VirtualParadiseService>();
 builder.Services.AddHostedSingleton<IDiscordService, DiscordService>();
 builder.Services.AddHostedSingleton<RelayService>();

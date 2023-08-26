@@ -9,22 +9,6 @@ namespace VPLink.Services;
 public interface IVirtualParadiseService
 {
     /// <summary>
-    ///     Gets an observable that is triggered when an avatar enters the Virtual Paradise world.
-    /// </summary>
-    /// <value>
-    ///     An observable that is triggered when an avatar enters the Virtual Paradise world.
-    /// </value>
-    IObservable<VirtualParadiseAvatar> OnAvatarJoined { get; }
-
-    /// <summary>
-    ///     Gets an observable that is triggered when an avatar exits the Virtual Paradise world.
-    /// </summary>
-    /// <value>
-    ///     An observable that is triggered when an avatar exits the Virtual Paradise world.
-    /// </value>
-    IObservable<VirtualParadiseAvatar> OnAvatarLeft { get; }
-
-    /// <summary>
     ///     Gets an observable that is triggered when a message is received from the Virtual Paradise world server.
     /// </summary>
     /// <value>

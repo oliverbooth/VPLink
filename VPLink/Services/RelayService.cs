@@ -11,6 +11,7 @@ internal sealed class RelayService : BackgroundService
 {
     private readonly ILogger<RelayService> _logger;
     private readonly IDiscordService _discordService;
+    private readonly IAvatarService _avatarService;
     private readonly IVirtualParadiseService _virtualParadiseService;
     private readonly DiscordSocketClient _discordClient;
     private readonly VirtualParadiseClient _virtualParadiseClient;
@@ -20,17 +21,20 @@ internal sealed class RelayService : BackgroundService
     /// </summary>
     /// <param name="logger">The logger.</param>
     /// <param name="discordService">The Discord service.</param>
+    /// <param name="avatarService">The avatar service.</param>
     /// <param name="virtualParadiseService">The Virtual Paradise service.</param>
     /// <param name="discordClient">The Discord client.</param>
     /// <param name="virtualParadiseClient">The Virtual Paradise client.</param>
     public RelayService(ILogger<RelayService> logger,
         IDiscordService discordService,
+        IAvatarService avatarService,
         IVirtualParadiseService virtualParadiseService,
         DiscordSocketClient discordClient,
         VirtualParadiseClient virtualParadiseClient)
     {
         _logger = logger;
         _discordService = discordService;
+        _avatarService = avatarService;
         _virtualParadiseService = virtualParadiseService;
         _discordClient = discordClient;
         _virtualParadiseClient = virtualParadiseClient;
@@ -45,8 +49,8 @@ internal sealed class RelayService : BackgroundService
             .Where(m => m.Author != _discordClient.CurrentUser)
             .SubscribeAsync(_virtualParadiseService.SendMessageAsync);
 
-        _virtualParadiseService.OnAvatarJoined.SubscribeAsync(_discordService.AnnounceArrival);
-        _virtualParadiseService.OnAvatarLeft.SubscribeAsync(_discordService.AnnounceDeparture);
+        _avatarService.OnAvatarJoined.SubscribeAsync(_discordService.AnnounceArrival);
+        _avatarService.OnAvatarLeft.SubscribeAsync(_discordService.AnnounceDeparture);
 
         _virtualParadiseService.OnMessageReceived
             .Where(m => m.Author != _virtualParadiseClient.CurrentAvatar)
