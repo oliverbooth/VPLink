@@ -4,7 +4,8 @@ using Discord.WebSocket;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using VPLink.Commands;
-using VPLink.Configuration;
+using VPLink.Common.Configuration;
+using VPLink.Common.Services;
 
 namespace VPLink.Services;
 
@@ -48,7 +49,7 @@ internal sealed class DiscordService : BackgroundService
         _discordClient.Ready += OnReady;
         _discordClient.InteractionCreated += OnInteractionCreated;
 
-        DiscordConfiguration configuration = _configurationService.DiscordConfiguration;
+        IDiscordConfiguration configuration = _configurationService.DiscordConfiguration;
         string token = configuration.Token ?? throw new InvalidOperationException("Token is not set.");
 
         _logger.LogDebug("Connecting to Discord");

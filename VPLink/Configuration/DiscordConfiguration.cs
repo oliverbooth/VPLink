@@ -1,19 +1,13 @@
+using VPLink.Common.Configuration;
+
 namespace VPLink.Configuration;
 
-/// <summary>
-///     Represents the Discord configuration.
-/// </summary>
-public sealed class DiscordConfiguration
+/// <inheritdoc />
+internal sealed class DiscordConfiguration : IDiscordConfiguration
 {
-    /// <summary>
-    ///     Gets or sets the channel ID to which the bot should relay messages.
-    /// </summary>
-    /// <value>The channel ID.</value>
+    /// <inheritdoc />
     public ulong ChannelId { get; set; }
 
-    /// <summary>
-    ///     Gets or sets the Discord token.
-    /// </summary>
-    /// <value>The Discord token.</value>
+    /// <inheritdoc />
     public string Token { get; set; } = string.Empty;
 }

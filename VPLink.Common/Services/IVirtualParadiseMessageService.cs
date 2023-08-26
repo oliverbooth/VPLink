@@ -1,6 +1,6 @@
-using VPLink.Data;
+using VPLink.Common.Data;
 
-namespace VPLink.Services;
+namespace VPLink.Common.Services;
 
 /// <summary>
 ///     Represents a service that listens for messages from the Virtual Paradise world.

@@ -3,15 +3,16 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using VPLink.Configuration;
-using VPLink.Data;
+using VPLink.Common.Configuration;
+using VPLink.Common.Data;
+using VPLink.Common.Services;
 using VpSharp;
 using VpSharp.Entities;
 using FontStyle = VpSharp.FontStyle;
 
 namespace VPLink.Services;
 
-/// <inheritdoc cref="VPLink.Services.IVirtualParadiseMessageService" />
+/// <inheritdoc cref="IVirtualParadiseMessageService" />
 internal sealed class VirtualParadiseMessageService : BackgroundService, IVirtualParadiseMessageService
 {
     private readonly ILogger<VirtualParadiseMessageService> _logger;
@@ -40,7 +41,7 @@ internal sealed class VirtualParadiseMessageService : BackgroundService, IVirtua
     /// <inheritdoc />
     public Task SendMessageAsync(RelayedMessage message)
     {
-        ChatConfiguration configuration = _configurationService.VirtualParadiseConfiguration.Chat;
+        IChatConfiguration configuration = _configurationService.VirtualParadiseConfiguration.Chat;
 
         Color color = Color.FromArgb((int)configuration.Color);
         FontStyle style = configuration.Style;

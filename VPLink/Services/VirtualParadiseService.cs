@@ -1,9 +1,10 @@
 using System.Reactive.Subjects;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using VPLink.Common.Configuration;
+using VPLink.Common.Services;
 using VpSharp;
 using VpSharp.Entities;
-using VirtualParadiseConfiguration = VPLink.Configuration.VirtualParadiseConfiguration;
 
 namespace VPLink.Services;
 
@@ -35,7 +36,7 @@ internal sealed class VirtualParadiseService : BackgroundService
         _logger.LogInformation("Establishing relay");
         _virtualParadiseClient.MessageReceived.Subscribe(_messageReceived);
 
-        VirtualParadiseConfiguration configuration = _configurationService.VirtualParadiseConfiguration;
+        IVirtualParadiseConfiguration configuration = _configurationService.VirtualParadiseConfiguration;
 
         string username = configuration.Username ?? throw new InvalidOperationException("Username is not set.");
         string password = configuration.Password ?? throw new InvalidOperationException("Password is not set.");

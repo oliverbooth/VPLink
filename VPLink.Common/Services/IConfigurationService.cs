@@ -1,6 +1,6 @@
-using VPLink.Configuration;
+using VPLink.Common.Configuration;
 
-namespace VPLink.Services;
+namespace VPLink.Common.Services;
 
 /// <summary>
 ///     Represents the configuration service.
@@ -11,17 +11,17 @@ public interface IConfigurationService
     ///     Gets the bot configuration.
     /// </summary>
     /// <value>The bot configuration.</value>
-    BotConfiguration BotConfiguration { get; }
+    IBotConfiguration BotConfiguration { get; }
 
     /// <summary>
     ///     Gets the Discord configuration.
     /// </summary>
     /// <value>The Discord configuration.</value>
-    DiscordConfiguration DiscordConfiguration { get; }
+    IDiscordConfiguration DiscordConfiguration { get; }
 
     /// <summary>
     ///     Gets the Virtual Paradise configuration.
     /// </summary>
     /// <value>The Virtual Paradise configuration.</value>
-    VirtualParadiseConfiguration VirtualParadiseConfiguration { get; }
+    IVirtualParadiseConfiguration VirtualParadiseConfiguration { get; }
 }

@@ -1,7 +1,7 @@
-using VPLink.Data;
+using VPLink.Common.Data;
 using VpSharp.Entities;
 
-namespace VPLink.Services;
+namespace VPLink.Common.Services;
 
 /// <summary>
 ///     Represents a service that listens for messages from the Discord bridge channel.

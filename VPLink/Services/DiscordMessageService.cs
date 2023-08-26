@@ -8,9 +8,11 @@ using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using VPLink.Configuration;
-using VPLink.Data;
+using VPLink.Common.Configuration;
+using VPLink.Common.Data;
+using VPLink.Common.Services;
 using VpSharp.Entities;
+using IUser = Discord.IUser;
 
 namespace VPLink.Services;
 
@@ -144,7 +146,7 @@ internal sealed partial class DiscordMessageService : BackgroundService, IDiscor
 
     private bool TryGetRelayChannel([NotNullWhen(true)] out ITextChannel? channel)
     {
-        DiscordConfiguration configuration = _configurationService.DiscordConfiguration;
+        IDiscordConfiguration configuration = _configurationService.DiscordConfiguration;
         ulong channelId = configuration.ChannelId;
 
         if (_discordClient.GetChannel(channelId) is ITextChannel textChannel)
