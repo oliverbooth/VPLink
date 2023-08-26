@@ -178,6 +178,13 @@ internal sealed partial class DiscordMessageService : BackgroundService, IDiscor
             return false;
         }
 
+        if (string.IsNullOrWhiteSpace(message.Content) && message.Attachments.Count == 0)
+        {
+            author = null;
+            message = null;
+            return false;
+        }
+
         return true;
     }
 }
