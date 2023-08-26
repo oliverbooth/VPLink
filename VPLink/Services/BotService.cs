@@ -56,6 +56,8 @@ internal sealed class BotService : BackgroundService
     {
         StartedAt = DateTimeOffset.UtcNow;
         _logger.LogInformation("VPLink v{Version} is starting...", Version);
+        _logger.LogInformation("Discord.Net v{Version}", DiscordNetVersion);
+        _logger.LogInformation("VP# v{Version}", VpSharpVersion);
         return Task.CompletedTask;
     }
 }
