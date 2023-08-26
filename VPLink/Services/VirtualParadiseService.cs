@@ -1,17 +1,13 @@
-using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using Discord;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using VpSharp;
 using VpSharp.Entities;
-using Color = System.Drawing.Color;
 using VirtualParadiseConfiguration = VPLink.Configuration.VirtualParadiseConfiguration;
 
 namespace VPLink.Services;
 
-/// <inheritdoc cref="IVirtualParadiseService" />
-internal sealed class VirtualParadiseService : BackgroundService, IVirtualParadiseService
+internal sealed class VirtualParadiseService : BackgroundService
 {
     private readonly ILogger<VirtualParadiseService> _logger;
     private readonly IConfigurationService _configurationService;
@@ -31,28 +27,6 @@ internal sealed class VirtualParadiseService : BackgroundService, IVirtualParadi
         _logger = logger;
         _configurationService = configurationService;
         _virtualParadiseClient = virtualParadiseClient;
-    }
-
-    /// <inheritdoc />
-    public IObservable<VirtualParadiseMessage> OnMessageReceived => _messageReceived.AsObservable();
-
-    /// <inheritdoc />
-    public Task SendMessageAsync(IUserMessage message)
-    {
-        if (message is null) throw new ArgumentNullException(nameof(message));
-        if (string.IsNullOrWhiteSpace(message.Content)) return Task.CompletedTask;
-
-        if (message.Author.IsBot && !_configurationService.BotConfiguration.RelayBotMessages)
-        {
-            _logger.LogDebug("Bot messages are disabled, ignoring message");
-            return Task.CompletedTask;
-        }
-
-        _logger.LogInformation("Message by {Author}: {Content}", message.Author, message.Content);
-
-        string displayName = message.Author.GlobalName ?? message.Author.Username;
-        return _virtualParadiseClient.SendMessageAsync(displayName, message.Content, FontStyle.Bold,
-            Color.MidnightBlue);
     }
 
     /// <inheritdoc />

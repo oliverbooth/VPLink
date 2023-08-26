@@ -1,18 +1,20 @@
-using Discord;
+using VPLink.Data;
 using VpSharp.Entities;
 
 namespace VPLink.Services;
 
 /// <summary>
-///     Represents a service that sends messages to the Discord channel.
+///     Represents a service that listens for messages from the Discord bridge channel.
 /// </summary>
-public interface IDiscordService
+public interface IDiscordMessageService : IRelayTarget
 {
     /// <summary>
-    ///     Gets an observable that is triggered when a message is received from the Discord channel.
+    ///     Gets an observable that is triggered when a valid message is received from the Discord bridge channel.
     /// </summary>
-    /// <value>An observable that is triggered when a message is received from the Discord channel.</value>
-    IObservable<IUserMessage> OnMessageReceived { get; }
+    /// <value>
+    ///     An observable that is triggered when a valid message is received from the Discord bridge channel.
+    /// </value>
+    IObservable<RelayedMessage> OnMessageReceived { get; }
 
     /// <summary>
     ///     Announces the arrival of an avatar.
@@ -27,11 +29,4 @@ public interface IDiscordService
     /// <param name="avatar">The avatar.</param>
     /// <returns>A <see cref="Task" /> representing the asynchronous operation.</returns>
     Task AnnounceDeparture(VirtualParadiseAvatar avatar);
-
-    /// <summary>
-    ///     Sends a message to the Discord channel.
-    /// </summary>
-    /// <param name="message">The message to send.</param>
-    /// <returns>A <see cref="Task" /> representing the asynchronous operation.</returns>
-    Task SendMessageAsync(VirtualParadiseMessage message);
 }

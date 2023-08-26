@@ -35,8 +35,11 @@ builder.Services.AddSingleton(new DiscordSocketConfig
 });
 
 builder.Services.AddHostedSingleton<IAvatarService, AvatarService>();
-builder.Services.AddHostedSingleton<IVirtualParadiseService, VirtualParadiseService>();
-builder.Services.AddHostedSingleton<IDiscordService, DiscordService>();
+builder.Services.AddHostedSingleton<IDiscordMessageService, DiscordMessageService>();
+builder.Services.AddHostedSingleton<IVirtualParadiseMessageService, VirtualParadiseMessageService>();
+
+builder.Services.AddHostedSingleton<DiscordService>();
+builder.Services.AddHostedSingleton<VirtualParadiseService>();
 builder.Services.AddHostedSingleton<RelayService>();
 
 await builder.Build().RunAsync();
