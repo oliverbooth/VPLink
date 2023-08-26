@@ -1,12 +1,14 @@
-﻿using System.Reactive.Linq;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
 using System.Text.RegularExpressions;
 using Discord;
+using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using VpBridge.Commands;
 using VpSharp;
 using VpSharp.Entities;
 
@@ -19,7 +21,9 @@ internal sealed partial class DiscordService : BackgroundService, IDiscordServic
     private static readonly Regex EscapeRegex = GetEscapeRegex();
 
     private readonly ILogger<DiscordService> _logger;
+    private readonly IServiceProvider _serviceProvider;
     private readonly IConfiguration _configuration;
+    private readonly InteractionService _interactionService;
     private readonly DiscordSocketClient _discordClient;
     private readonly VirtualParadiseClient _virtualParadiseClient;
     private readonly Subject<IUserMessage> _messageReceived = new();
@@ -28,16 +32,22 @@ internal sealed partial class DiscordService : BackgroundService, IDiscordServic
     ///     Initializes a new instance of the <see cref="DiscordService" /> class.
     /// </summary>
     /// <param name="logger">The logger.</param>
+    /// <param name="serviceProvider">The service provider.</param>
     /// <param name="configuration">The configuration.</param>
+    /// <param name="interactionService">The interaction service.</param>
     /// <param name="discordClient">The Discord client.</param>
     /// <param name="virtualParadiseClient">The Virtual Paradise client.</param>
     public DiscordService(ILogger<DiscordService> logger,
+        IServiceProvider serviceProvider,
         IConfiguration configuration,
+        InteractionService interactionService,
         DiscordSocketClient discordClient,
         VirtualParadiseClient virtualParadiseClient)
     {
         _logger = logger;
+        _serviceProvider = serviceProvider;
         _configuration = configuration;
+        _interactionService = interactionService;
         _discordClient = discordClient;
         _virtualParadiseClient = virtualParadiseClient;
     }
@@ -49,40 +59,13 @@ internal sealed partial class DiscordService : BackgroundService, IDiscordServic
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _logger.LogInformation("Establishing relay");
-        _discordClient.MessageReceived += arg =>
-        {
-            if (arg is not IUserMessage message)
-                return Task.CompletedTask;
 
-            if (message.Channel.Id != _configuration.GetSection("Discord:ChannelId").Get<ulong>())
-                return Task.CompletedTask;
+        _logger.LogInformation("Adding command modules");
+        await _interactionService.AddModuleAsync<WhoCommand>(_serviceProvider).ConfigureAwait(false);
 
-            if (message.Content.Equals("!who"))
-            {
-                VirtualParadiseAvatar[] avatars = _virtualParadiseClient.Avatars.Where(a => !a.IsBot).ToArray();
-                int count = avatars.Length;
-
-                if (count > 0)
-                {
-                    var builder = new StringBuilder();
-                    builder.AppendLine("**Users In World 🌎**");
-                    foreach (VirtualParadiseAvatar avatar in _virtualParadiseClient.Avatars)
-                    {
-                        if (avatar.IsBot || avatar == _virtualParadiseClient.CurrentAvatar)
-                            continue;
-
-                        builder.AppendLine($"• {avatar.Name}");
-                    }
-
-                    return message.ReplyAsync(builder.ToString());
-                }
-
-                return message.ReplyAsync("**No Users In World 🚫**");
-            }
-
-            _messageReceived.OnNext(message);
-            return Task.CompletedTask;
-        };
+        _discordClient.Ready += OnReady;
+        _discordClient.InteractionCreated += OnInteractionCreated;
+        _discordClient.MessageReceived += OnDiscordMessageReceived;
 
         string token = _configuration.GetSection("Discord:Token").Value ??
                        throw new InvalidOperationException("Token is not set.");
@@ -90,6 +73,45 @@ internal sealed partial class DiscordService : BackgroundService, IDiscordServic
         _logger.LogDebug("Connecting to Discord");
         await _discordClient.LoginAsync(TokenType.Bot, token);
         await _discordClient.StartAsync();
+    }
+
+    private Task OnDiscordMessageReceived(SocketMessage arg)
+    {
+        if (arg is not IUserMessage message)
+            return Task.CompletedTask;
+
+        if (message.Channel.Id != _configuration.GetSection("Discord:ChannelId").Get<ulong>())
+            return Task.CompletedTask;
+
+        _messageReceived.OnNext(message);
+        return Task.CompletedTask;
+    }
+
+    private async Task OnInteractionCreated(SocketInteraction interaction)
+    {
+        try
+        {
+            var context = new SocketInteractionContext(_discordClient, interaction);
+            IResult result = await _interactionService.ExecuteCommandAsync(context, _serviceProvider);
+
+            if (!result.IsSuccess)
+                switch (result.Error)
+                {
+                    case InteractionCommandError.UnmetPrecondition:
+                        break;
+                }
+        }
+        catch
+        {
+            if (interaction.Type is InteractionType.ApplicationCommand)
+                await interaction.GetOriginalResponseAsync().ContinueWith(async msg => await msg.Result.DeleteAsync());
+        }
+    }
+
+    private Task OnReady()
+    {
+        _logger.LogInformation("Discord client ready");
+        return _interactionService.RegisterCommandsGloballyAsync();
     }
 
     /// <inheritdoc />

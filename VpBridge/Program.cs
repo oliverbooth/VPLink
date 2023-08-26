@@ -1,4 +1,5 @@
-﻿using Discord;
+using Discord;
+using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -24,10 +25,13 @@ builder.Logging.ClearProviders();
 builder.Logging.AddSerilog();
 
 builder.Services.AddSingleton<VirtualParadiseClient>();
-builder.Services.AddSingleton(new DiscordSocketClient(new DiscordSocketConfig
+
+builder.Services.AddSingleton<InteractionService>();
+builder.Services.AddSingleton<DiscordSocketClient>();
+builder.Services.AddSingleton(new DiscordSocketConfig
 {
     GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.MessageContent
-}));
+});
 
 builder.Services.AddHostedSingleton<IVirtualParadiseService, VirtualParadiseService>();
 builder.Services.AddHostedSingleton<IDiscordService, DiscordService>();

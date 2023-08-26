@@ -52,6 +52,7 @@
         <PackageReference Include="VpSharp" Version="0.1.0-nightly.43"/>
         <PackageReference Include="X10D" Version="3.3.1"/>
         <PackageReference Include="X10D.Hosting" Version="3.3.1"/>
+        <PackageReference Include="ZString" Version="2.5.0" />
     </ItemGroup>
 
 </Project>
