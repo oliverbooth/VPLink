@@ -25,6 +25,7 @@ builder.Logging.ClearProviders();
 builder.Logging.AddSerilog();
 
 builder.Services.AddSingleton<VirtualParadiseClient>();
+builder.Services.AddSingleton<IConfigurationService, ConfigurationService>();
 
 builder.Services.AddSingleton<InteractionService>();
 builder.Services.AddSingleton<DiscordSocketClient>();

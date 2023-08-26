@@ -5,10 +5,10 @@ using System.Text.RegularExpressions;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using VPLink.Commands;
+using VPLink.Configuration;
 using VpSharp.Entities;
 
 namespace VPLink.Services;
@@ -21,7 +21,7 @@ internal sealed partial class DiscordService : BackgroundService, IDiscordServic
 
     private readonly ILogger<DiscordService> _logger;
     private readonly IServiceProvider _serviceProvider;
-    private readonly IConfiguration _configuration;
+    private readonly IConfigurationService _configurationService;
     private readonly InteractionService _interactionService;
     private readonly DiscordSocketClient _discordClient;
     private readonly Subject<IUserMessage> _messageReceived = new();
@@ -31,18 +31,18 @@ internal sealed partial class DiscordService : BackgroundService, IDiscordServic
     /// </summary>
     /// <param name="logger">The logger.</param>
     /// <param name="serviceProvider">The service provider.</param>
-    /// <param name="configuration">The configuration.</param>
+    /// <param name="configurationService">The configuration service.</param>
     /// <param name="interactionService">The interaction service.</param>
     /// <param name="discordClient">The Discord client.</param>
     public DiscordService(ILogger<DiscordService> logger,
         IServiceProvider serviceProvider,
-        IConfiguration configuration,
+        IConfigurationService configurationService,
         InteractionService interactionService,
         DiscordSocketClient discordClient)
     {
         _logger = logger;
         _serviceProvider = serviceProvider;
-        _configuration = configuration;
+        _configurationService = configurationService;
         _interactionService = interactionService;
         _discordClient = discordClient;
     }
@@ -62,8 +62,8 @@ internal sealed partial class DiscordService : BackgroundService, IDiscordServic
         _discordClient.InteractionCreated += OnInteractionCreated;
         _discordClient.MessageReceived += OnDiscordMessageReceived;
 
-        string token = _configuration.GetSection("Discord:Token").Value ??
-                       throw new InvalidOperationException("Token is not set.");
+        DiscordConfiguration configuration = _configurationService.DiscordConfiguration;
+        string token = configuration.Token ?? throw new InvalidOperationException("Token is not set.");
 
         _logger.LogDebug("Connecting to Discord");
         await _discordClient.LoginAsync(TokenType.Bot, token);
@@ -75,7 +75,8 @@ internal sealed partial class DiscordService : BackgroundService, IDiscordServic
         if (arg is not IUserMessage message)
             return Task.CompletedTask;
 
-        if (message.Channel.Id != _configuration.GetSection("Discord:ChannelId").Get<ulong>())
+        DiscordConfiguration configuration = _configurationService.DiscordConfiguration;
+        if (message.Channel.Id != configuration.ChannelId)
             return Task.CompletedTask;
 
         _messageReceived.OnNext(message);
@@ -153,7 +154,7 @@ internal sealed partial class DiscordService : BackgroundService, IDiscordServic
             return Task.CompletedTask;
         }
 
-        if (author.IsBot && !_configuration.GetSection("Bot:RelayBotMessages").Get<bool>())
+        if (author.IsBot && !_configurationService.BotConfiguration.RelayBotMessages)
         {
             _logger.LogDebug("Bot messages are disabled, ignoring message");
             return Task.CompletedTask;
@@ -172,7 +173,9 @@ internal sealed partial class DiscordService : BackgroundService, IDiscordServic
 
     private bool TryGetRelayChannel([NotNullWhen(true)] out ITextChannel? channel)
     {
-        var channelId = _configuration.GetValue<ulong>("Discord:ChannelId");
+        DiscordConfiguration configuration = _configurationService.DiscordConfiguration;
+        ulong channelId = configuration.ChannelId;
+
         if (_discordClient.GetChannel(channelId) is ITextChannel textChannel)
         {
             channel = textChannel;

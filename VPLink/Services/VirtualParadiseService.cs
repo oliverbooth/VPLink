@@ -1,12 +1,13 @@
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using Discord;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using VPLink.Configuration;
 using VpSharp;
 using VpSharp.Entities;
 using Color = System.Drawing.Color;
+using VirtualParadiseConfiguration = VPLink.Configuration.VirtualParadiseConfiguration;
 
 namespace VPLink.Services;
 
@@ -14,7 +15,7 @@ namespace VPLink.Services;
 internal sealed class VirtualParadiseService : BackgroundService, IVirtualParadiseService
 {
     private readonly ILogger<VirtualParadiseService> _logger;
-    private readonly IConfiguration _configuration;
+    private readonly IConfigurationService _configurationService;
     private readonly VirtualParadiseClient _virtualParadiseClient;
     private readonly Subject<VirtualParadiseMessage> _messageReceived = new();
     private readonly Subject<VirtualParadiseAvatar> _avatarJoined = new();
@@ -24,14 +25,14 @@ internal sealed class VirtualParadiseService : BackgroundService, IVirtualParadi
     ///     Initializes a new instance of the <see cref="VirtualParadiseService" /> class.
     /// </summary>
     /// <param name="logger">The logger.</param>
-    /// <param name="configuration">The configuration.</param>
+    /// <param name="configurationService">The configuration service.</param>
     /// <param name="virtualParadiseClient">The Virtual Paradise client.</param>
     public VirtualParadiseService(ILogger<VirtualParadiseService> logger,
-        IConfiguration configuration,
+        IConfigurationService configurationService,
         VirtualParadiseClient virtualParadiseClient)
     {
         _logger = logger;
-        _configuration = configuration;
+        _configurationService = configurationService;
         _virtualParadiseClient = virtualParadiseClient;
     }
 
@@ -50,7 +51,7 @@ internal sealed class VirtualParadiseService : BackgroundService, IVirtualParadi
         if (message is null) throw new ArgumentNullException(nameof(message));
         if (string.IsNullOrWhiteSpace(message.Content)) return Task.CompletedTask;
 
-        if (message.Author.IsBot && !_configuration.GetSection("Bot:RelayBotMessages").Get<bool>())
+        if (message.Author.IsBot && !_configurationService.BotConfiguration.RelayBotMessages)
         {
             _logger.LogDebug("Bot messages are disabled, ignoring message");
             return Task.CompletedTask;
@@ -59,7 +60,8 @@ internal sealed class VirtualParadiseService : BackgroundService, IVirtualParadi
         _logger.LogInformation("Message by {Author}: {Content}", message.Author, message.Content);
 
         string displayName = message.Author.GlobalName ?? message.Author.Username;
-        return _virtualParadiseClient.SendMessageAsync(displayName, message.Content, FontStyle.Bold, Color.MidnightBlue);
+        return _virtualParadiseClient.SendMessageAsync(displayName, message.Content, FontStyle.Bold,
+            Color.MidnightBlue);
     }
 
     /// <inheritdoc />
@@ -70,14 +72,12 @@ internal sealed class VirtualParadiseService : BackgroundService, IVirtualParadi
         _virtualParadiseClient.AvatarJoined.Subscribe(OnVirtualParadiseAvatarJoined);
         _virtualParadiseClient.AvatarLeft.Subscribe(OnVirtualParadiseAvatarLeft);
 
-        string username = _configuration.GetSection("VirtualParadise:Username").Value ??
-                          throw new InvalidOperationException("Username is not set.");
-        string password = _configuration.GetSection("VirtualParadise:Password").Value ??
-                          throw new InvalidOperationException("Password is not set.");
-        string world = _configuration.GetSection("VirtualParadise:World").Value ??
-                       throw new InvalidOperationException("World is not set.");
-        string botName = _configuration.GetSection("VirtualParadise:BotName").Value ??
-                         throw new InvalidOperationException("Bot name is not set.");
+        VirtualParadiseConfiguration configuration = _configurationService.VirtualParadiseConfiguration;
+
+        string username = configuration.Username ?? throw new InvalidOperationException("Username is not set.");
+        string password = configuration.Password ?? throw new InvalidOperationException("Password is not set.");
+        string world = configuration.World ?? throw new InvalidOperationException("World is not set.");
+        string botName = configuration.BotName ?? throw new InvalidOperationException("Bot name is not set.");
 
         _logger.LogDebug("Connecting to Virtual Paradise");
         await _virtualParadiseClient.ConnectAsync().ConfigureAwait(false);
@@ -89,15 +89,10 @@ internal sealed class VirtualParadiseService : BackgroundService, IVirtualParadi
 
     private void OnVirtualParadiseAvatarJoined(VirtualParadiseAvatar avatar)
     {
-        if (!_configuration.GetValue<bool>("Bot:AnnounceAvatarEvents"))
-        {
-            _logger.LogDebug("Join/leave events are disabled, ignoring event");
-            return;
-        }
+        BotConfiguration configuration = _configurationService.BotConfiguration;
 
-        if (avatar.IsBot && !_configuration.GetSection("Bot:AnnounceBots").Get<bool>())
+        if (!configuration.AnnounceAvatarEvents || avatar.IsBot && !configuration.AnnounceBots)
         {
-            _logger.LogDebug("Bot events are disabled, ignoring event");
             return;
         }
 
@@ -106,15 +101,10 @@ internal sealed class VirtualParadiseService : BackgroundService, IVirtualParadi
 
     private void OnVirtualParadiseAvatarLeft(VirtualParadiseAvatar avatar)
     {
-        if (!_configuration.GetValue<bool>("Bot:AnnounceAvatarEvents"))
-        {
-            _logger.LogDebug("Join/leave events are disabled, ignoring event");
-            return;
-        }
+        BotConfiguration configuration = _configurationService.BotConfiguration;
 
-        if (avatar.IsBot && !_configuration.GetSection("Bot:AnnounceBots").Get<bool>())
+        if (!configuration.AnnounceAvatarEvents || avatar.IsBot && !configuration.AnnounceBots)
         {
-            _logger.LogDebug("Bot events are disabled, ignoring event");
             return;
         }
 
