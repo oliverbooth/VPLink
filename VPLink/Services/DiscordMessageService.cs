@@ -97,7 +97,9 @@ internal sealed partial class DiscordMessageService : BackgroundService, IDiscor
         if (arg is not IUserMessage message)
             return Task.CompletedTask;
 
-        IUser author = message.Author;
+        if (message.Author is not IGuildUser author)
+            return Task.CompletedTask;
+
         if (author.Id == _discordClient.CurrentUser.Id)
             return Task.CompletedTask;
 
@@ -107,7 +109,7 @@ internal sealed partial class DiscordMessageService : BackgroundService, IDiscor
         if (message.Channel.Id != _configurationService.DiscordConfiguration.ChannelId)
             return Task.CompletedTask;
 
-        string displayName = author.GlobalName ?? author.Username;
+        string displayName = author.Nickname ?? author.GlobalName ?? author.Username;
         string unescaped = UnescapeRegex.Replace(message.Content, "$1");
         string content = EscapeRegex.Replace(unescaped, "\\$1");
 
