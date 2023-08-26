@@ -2,7 +2,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
-using System.Text.RegularExpressions;
 using Cysharp.Text;
 using Discord;
 using Discord.WebSocket;
@@ -19,8 +18,6 @@ namespace VPLink.Services;
 internal sealed partial class DiscordMessageService : BackgroundService, IDiscordMessageService
 {
     private static readonly Encoding Utf8Encoding = new UTF8Encoding(false, false);
-    private static readonly Regex UnescapeRegex = GetUnescapeRegex();
-    private static readonly Regex EscapeRegex = GetEscapeRegex();
 
     private readonly ILogger<DiscordMessageService> _logger;
     private readonly IConfigurationService _configurationService;
@@ -103,8 +100,7 @@ internal sealed partial class DiscordMessageService : BackgroundService, IDiscor
             return Task.CompletedTask;
 
         string displayName = author.Nickname ?? author.GlobalName ?? author.Username;
-        string unescaped = UnescapeRegex.Replace(message.Content, "$1");
-        string content = EscapeRegex.Replace(unescaped, "\\$1");
+        string content = message.Content;
 
         IReadOnlyCollection<IAttachment> attachments = message.Attachments;
         if (attachments.Count > 0)
@@ -154,10 +150,4 @@ internal sealed partial class DiscordMessageService : BackgroundService, IDiscor
         channel = null;
         return false;
     }
-
-    [GeneratedRegex(@"\\(\*|_|`|~|\\)", RegexOptions.Compiled)]
-    private static partial Regex GetUnescapeRegex();
-
-    [GeneratedRegex(@"(\*|_|`|~|\\)", RegexOptions.Compiled)]
-    private static partial Regex GetEscapeRegex();
 }
