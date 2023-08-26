@@ -2,6 +2,23 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VPLink", "VPLink\VPLink.csproj", "{CD488A1E-0232-4EB5-A381-38A42B267B11}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B1080228-7E6C-48CB-976B-21EF7F5DBC33}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+		CONTRIBUTING.md = CONTRIBUTING.md
+		LICENSE.md = LICENSE.md
+		.github\CODE_OF_CONDUCT.md = .github\CODE_OF_CONDUCT.md
+		.github\FUNDING.yml = .github\FUNDING.yml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Workflows", "Workflows", "{BBE9420C-B35B-48C4-AF9B-53B0ED50E46B}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\docker-release.yml = .github\workflows\docker-release.yml
+		.github\workflows\dotnet.yml = .github\workflows\dotnet.yml
+		.github\workflows\prerelease.yml = .github\workflows\prerelease.yml
+		.github\workflows\release.yml = .github\workflows\release.yml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

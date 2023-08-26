@@ -1,0 +1,18 @@
+[VirtualParadise]
+BotName = ""
+Username = ""
+Password = ""
+World = ""
+
+[VirtualParadise.Chat]
+Color = 1644912
+Style = 0
+
+[Discord]
+Token = ""
+ChannelId = 0
+
+[Bot]
+AnnounceAvatarEvents = true
+AnnounceBots = false
+RelayBotMessages = false
