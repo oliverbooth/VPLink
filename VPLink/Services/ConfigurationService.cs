@@ -20,18 +20,19 @@ internal sealed class ConfigurationService : IConfigurationService
     /// <inheritdoc />
     public BotConfiguration BotConfiguration
     {
-        get => _configuration.GetSection("Bot").Get<BotConfiguration>()!;
+        get => _configuration.GetSection("Bot").Get<BotConfiguration>() ?? new BotConfiguration();
     }
 
     /// <inheritdoc />
     public DiscordConfiguration DiscordConfiguration
     {
-        get => _configuration.GetSection("Discord").Get<DiscordConfiguration>()!;
+        get => _configuration.GetSection("Discord").Get<DiscordConfiguration>() ?? new DiscordConfiguration();
     }
 
     /// <inheritdoc />
     public VirtualParadiseConfiguration VirtualParadiseConfiguration
     {
-        get => _configuration.GetSection("VirtualParadise").Get<VirtualParadiseConfiguration>()!;
+        get => _configuration.GetSection("VirtualParadise").Get<VirtualParadiseConfiguration>() ??
+               new VirtualParadiseConfiguration();
     }
 }
