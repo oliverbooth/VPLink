@@ -12,7 +12,6 @@ using VPLink.Common.Configuration;
 using VPLink.Common.Data;
 using VPLink.Common.Services;
 using VpSharp.Entities;
-using IUser = Discord.IUser;
 
 namespace VPLink.Services;
 
