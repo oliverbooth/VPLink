@@ -84,19 +84,7 @@ internal sealed partial class DiscordMessageService : BackgroundService, IDiscor
 
     private Task OnDiscordMessageReceived(SocketMessage arg)
     {
-        if (arg is not IUserMessage message)
-            return Task.CompletedTask;
-
-        if (message.Author is not IGuildUser author)
-            return Task.CompletedTask;
-
-        if (author.Id == _discordClient.CurrentUser.Id)
-            return Task.CompletedTask;
-
-        if (author.IsBot && !_configurationService.BotConfiguration.RelayBotMessages)
-            return Task.CompletedTask;
-
-        if (message.Channel.Id != _configurationService.DiscordConfiguration.ChannelId)
+        if (!ValidateMessage(arg, out IUserMessage? message, out IGuildUser? author))
             return Task.CompletedTask;
 
         string displayName = author.Nickname ?? author.GlobalName ?? author.Username;
@@ -149,5 +137,47 @@ internal sealed partial class DiscordMessageService : BackgroundService, IDiscor
         _logger.LogError("Channel {ChannelId} does not exist", channelId);
         channel = null;
         return false;
+    }
+
+    private bool ValidateMessage(SocketMessage socketMessage,
+        [NotNullWhen(true)] out IUserMessage? message,
+        [NotNullWhen(true)] out IGuildUser? author)
+    {
+        message = socketMessage as IUserMessage;
+        if (message is null)
+        {
+            author = null;
+            return false;
+        }
+
+        author = message.Author as IGuildUser;
+        if (author is null)
+        {
+            message = null;
+            return false;
+        }
+
+        if (author.Id == _discordClient.CurrentUser.Id)
+        {
+            author = null;
+            message = null;
+            return false;
+        }
+
+        if (author.IsBot && !_configurationService.BotConfiguration.RelayBotMessages)
+        {
+            author = null;
+            message = null;
+            return false;
+        }
+
+        if (message.Channel.Id != _configurationService.DiscordConfiguration.ChannelId)
+        {
+            author = null;
+            message = null;
+            return false;
+        }
+
+        return true;
     }
 }
