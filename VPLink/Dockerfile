@@ -5,10 +5,10 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
-COPY ["VPLink/VPLink.csproj", "VpBridge/"]
+COPY ["VPLink/VPLink.csproj", "VPLink/"]
 RUN dotnet restore "VPLink/VPLink.csproj"
 COPY . .
-WORKDIR "/src/VpBridge"
+WORKDIR "/src/VPLink"
 RUN dotnet build "VPLink.csproj" -c Release -o /app/build
 
 FROM build AS publish
