@@ -15,7 +15,7 @@ public sealed class VirtualParadiseConfiguration
     ///     Gets or sets the chat configuration.
     /// </summary>
     /// <value>The chat configuration.</value>
-    public ChatConfiguration ChatConfiguration { get; } = new();
+    public ChatConfiguration Chat { get; } = new();
 
     /// <summary>
     ///     Gets or sets the password with which to log in to Virtual Paradise.

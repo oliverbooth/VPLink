@@ -40,7 +40,7 @@ internal sealed class VirtualParadiseMessageService : BackgroundService, IVirtua
     /// <inheritdoc />
     public Task SendMessageAsync(RelayedMessage message)
     {
-        ChatConfiguration configuration = _configurationService.VirtualParadiseConfiguration.ChatConfiguration;
+        ChatConfiguration configuration = _configurationService.VirtualParadiseConfiguration.Chat;
 
         Color color = Color.FromArgb((int)configuration.Color);
         FontStyle style = configuration.Style;
