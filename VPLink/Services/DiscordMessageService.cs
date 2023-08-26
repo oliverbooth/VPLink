@@ -102,6 +102,9 @@ internal sealed partial class DiscordMessageService : BackgroundService, IDiscor
         if (author.IsBot && !_configurationService.BotConfiguration.RelayBotMessages)
             return Task.CompletedTask;
 
+        if (message.Channel.Id != _configurationService.DiscordConfiguration.ChannelId)
+            return Task.CompletedTask;
+
         string displayName = author.GlobalName ?? author.Username;
         string unescaped = UnescapeRegex.Replace(message.Content, "$1");
         string content = EscapeRegex.Replace(unescaped, "\\$1");
