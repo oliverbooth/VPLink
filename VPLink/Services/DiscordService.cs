@@ -1,6 +1,6 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Text;
 using System.Text.RegularExpressions;
 using Discord;
 using Discord.Interactions;
@@ -9,7 +9,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using VPLink.Commands;
-using VpSharp;
 using VpSharp.Entities;
 
 namespace VPLink.Services;
@@ -25,7 +24,6 @@ internal sealed partial class DiscordService : BackgroundService, IDiscordServic
     private readonly IConfiguration _configuration;
     private readonly InteractionService _interactionService;
     private readonly DiscordSocketClient _discordClient;
-    private readonly VirtualParadiseClient _virtualParadiseClient;
     private readonly Subject<IUserMessage> _messageReceived = new();
 
     /// <summary>
@@ -36,20 +34,17 @@ internal sealed partial class DiscordService : BackgroundService, IDiscordServic
     /// <param name="configuration">The configuration.</param>
     /// <param name="interactionService">The interaction service.</param>
     /// <param name="discordClient">The Discord client.</param>
-    /// <param name="virtualParadiseClient">The Virtual Paradise client.</param>
     public DiscordService(ILogger<DiscordService> logger,
         IServiceProvider serviceProvider,
         IConfiguration configuration,
         InteractionService interactionService,
-        DiscordSocketClient discordClient,
-        VirtualParadiseClient virtualParadiseClient)
+        DiscordSocketClient discordClient)
     {
         _logger = logger;
         _serviceProvider = serviceProvider;
         _configuration = configuration;
         _interactionService = interactionService;
         _discordClient = discordClient;
-        _virtualParadiseClient = virtualParadiseClient;
     }
 
     /// <inheritdoc />
@@ -115,6 +110,38 @@ internal sealed partial class DiscordService : BackgroundService, IDiscordServic
     }
 
     /// <inheritdoc />
+    public Task AnnounceArrival(VirtualParadiseAvatar avatar)
+    {
+        if (avatar is null) throw new ArgumentNullException(nameof(avatar));
+        if (!TryGetRelayChannel(out ITextChannel? channel)) return Task.CompletedTask;
+
+        var embed = new EmbedBuilder();
+        embed.WithColor(0x00FF00);
+        embed.WithTitle("📥 Avatar Joined");
+        embed.WithDescription(avatar.Name);
+        embed.WithTimestamp(DateTimeOffset.UtcNow);
+        embed.WithFooter($"Session {avatar.Session}");
+
+        return channel.SendMessageAsync(embed: embed.Build());
+    }
+
+    /// <inheritdoc />
+    public Task AnnounceDeparture(VirtualParadiseAvatar avatar)
+    {
+        if (avatar is null) throw new ArgumentNullException(nameof(avatar));
+        if (!TryGetRelayChannel(out ITextChannel? channel)) return Task.CompletedTask;
+
+        var embed = new EmbedBuilder();
+        embed.WithColor(0xFF0000);
+        embed.WithTitle("📤 Avatar Left");
+        embed.WithDescription(avatar.Name);
+        embed.WithTimestamp(DateTimeOffset.UtcNow);
+        embed.WithFooter($"Session {avatar.Session}");
+
+        return channel.SendMessageAsync(embed: embed.Build());
+    }
+
+    /// <inheritdoc />
     public Task SendMessageAsync(VirtualParadiseMessage message)
     {
         if (message is null) throw new ArgumentNullException(nameof(message));
@@ -134,18 +161,27 @@ internal sealed partial class DiscordService : BackgroundService, IDiscordServic
 
         _logger.LogInformation("Message by {Author}: {Content}", author, message.Content);
 
-        var channelId = _configuration.GetSection("Discord:ChannelId").Get<ulong>();
-        if (_discordClient.GetChannel(channelId) is not ITextChannel channel)
-        {
-            _logger.LogError("Channel {ChannelId} does not exist", channelId);
-            return Task.CompletedTask;
-        }
+        if (!TryGetRelayChannel(out ITextChannel? channel)) return Task.CompletedTask;
 
         string unescaped = UnescapeRegex.Replace(message.Content, "$1");
         string escaped = EscapeRegex.Replace(unescaped, "\\$1");
 
         string displayName = author.Name;
         return channel.SendMessageAsync($"**{displayName}**: {escaped}");
+    }
+
+    private bool TryGetRelayChannel([NotNullWhen(true)] out ITextChannel? channel)
+    {
+        var channelId = _configuration.GetValue<ulong>("Discord:ChannelId");
+        if (_discordClient.GetChannel(channelId) is ITextChannel textChannel)
+        {
+            channel = textChannel;
+            return true;
+        }
+
+        _logger.LogError("Channel {ChannelId} does not exist", channelId);
+        channel = null;
+        return false;
     }
 
     [GeneratedRegex(@"\\(\*|_|`|~|\\)", RegexOptions.Compiled)]

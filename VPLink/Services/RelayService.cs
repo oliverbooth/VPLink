@@ -45,6 +45,9 @@ internal sealed class RelayService : BackgroundService
             .Where(m => m.Author != _discordClient.CurrentUser)
             .SubscribeAsync(_virtualParadiseService.SendMessageAsync);
 
+        _virtualParadiseService.OnAvatarJoined.SubscribeAsync(_discordService.AnnounceArrival);
+        _virtualParadiseService.OnAvatarLeft.SubscribeAsync(_discordService.AnnounceDeparture);
+
         _virtualParadiseService.OnMessageReceived
             .Where(m => m.Author != _virtualParadiseClient.CurrentAvatar)
             .SubscribeAsync(_discordService.SendMessageAsync);

@@ -17,6 +17,8 @@ internal sealed class VirtualParadiseService : BackgroundService, IVirtualParadi
     private readonly IConfiguration _configuration;
     private readonly VirtualParadiseClient _virtualParadiseClient;
     private readonly Subject<VirtualParadiseMessage> _messageReceived = new();
+    private readonly Subject<VirtualParadiseAvatar> _avatarJoined = new();
+    private readonly Subject<VirtualParadiseAvatar> _avatarLeft = new();
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="VirtualParadiseService" /> class.
@@ -32,6 +34,12 @@ internal sealed class VirtualParadiseService : BackgroundService, IVirtualParadi
         _configuration = configuration;
         _virtualParadiseClient = virtualParadiseClient;
     }
+
+    /// <inheritdoc />
+    public IObservable<VirtualParadiseAvatar> OnAvatarJoined => _avatarJoined.AsObservable();
+
+    /// <inheritdoc />
+    public IObservable<VirtualParadiseAvatar> OnAvatarLeft => _avatarJoined.AsObservable();
 
     /// <inheritdoc />
     public IObservable<VirtualParadiseMessage> OnMessageReceived => _messageReceived.AsObservable();
@@ -59,6 +67,8 @@ internal sealed class VirtualParadiseService : BackgroundService, IVirtualParadi
     {
         _logger.LogInformation("Establishing relay");
         _virtualParadiseClient.MessageReceived.Subscribe(_messageReceived);
+        _virtualParadiseClient.AvatarJoined.Subscribe(OnVirtualParadiseAvatarJoined);
+        _virtualParadiseClient.AvatarLeft.Subscribe(OnVirtualParadiseAvatarLeft);
 
         string username = _configuration.GetSection("VirtualParadise:Username").Value ??
                           throw new InvalidOperationException("Username is not set.");
@@ -75,5 +85,39 @@ internal sealed class VirtualParadiseService : BackgroundService, IVirtualParadi
 
         _logger.LogInformation("Entering world {World}", world);
         await _virtualParadiseClient.EnterAsync(world).ConfigureAwait(false);
+    }
+
+    private void OnVirtualParadiseAvatarJoined(VirtualParadiseAvatar avatar)
+    {
+        if (!_configuration.GetValue<bool>("Bot:AnnounceAvatarEvents"))
+        {
+            _logger.LogDebug("Join/leave events are disabled, ignoring event");
+            return;
+        }
+
+        if (avatar.IsBot && !_configuration.GetSection("Bot:AnnounceBots").Get<bool>())
+        {
+            _logger.LogDebug("Bot events are disabled, ignoring event");
+            return;
+        }
+
+        _avatarJoined.OnNext(avatar);
+    }
+
+    private void OnVirtualParadiseAvatarLeft(VirtualParadiseAvatar avatar)
+    {
+        if (!_configuration.GetValue<bool>("Bot:AnnounceAvatarEvents"))
+        {
+            _logger.LogDebug("Join/leave events are disabled, ignoring event");
+            return;
+        }
+
+        if (avatar.IsBot && !_configuration.GetSection("Bot:AnnounceBots").Get<bool>())
+        {
+            _logger.LogDebug("Bot events are disabled, ignoring event");
+            return;
+        }
+
+        _avatarLeft.OnNext(avatar);
     }
 }
