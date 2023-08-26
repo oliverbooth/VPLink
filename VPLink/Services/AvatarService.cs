@@ -2,7 +2,8 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using VPLink.Configuration;
+using VPLink.Common.Configuration;
+using VPLink.Common.Services;
 using VpSharp;
 using VpSharp.Entities;
 
@@ -50,7 +51,7 @@ internal sealed class AvatarService : BackgroundService, IAvatarService
     {
         _logger.LogInformation("{Avatar} joined", avatar);
 
-        BotConfiguration configuration = _configurationService.BotConfiguration;
+        IBotConfiguration configuration = _configurationService.BotConfiguration;
         if (!configuration.AnnounceAvatarEvents || avatar.IsBot && !configuration.AnnounceBots)
             return;
 
@@ -61,7 +62,7 @@ internal sealed class AvatarService : BackgroundService, IAvatarService
     {
         _logger.LogInformation("{Avatar} left", avatar);
 
-        BotConfiguration configuration = _configurationService.BotConfiguration;
+        IBotConfiguration configuration = _configurationService.BotConfiguration;
         if (!configuration.AnnounceAvatarEvents || avatar.IsBot && !configuration.AnnounceBots)
             return;
 

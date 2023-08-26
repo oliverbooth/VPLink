@@ -1,4 +1,6 @@
 using Microsoft.Extensions.Configuration;
+using VPLink.Common.Configuration;
+using VPLink.Common.Services;
 using VPLink.Configuration;
 
 namespace VPLink.Services;
@@ -18,19 +20,19 @@ internal sealed class ConfigurationService : IConfigurationService
     }
 
     /// <inheritdoc />
-    public BotConfiguration BotConfiguration
+    public IBotConfiguration BotConfiguration
     {
         get => _configuration.GetSection("Bot").Get<BotConfiguration>() ?? new BotConfiguration();
     }
 
     /// <inheritdoc />
-    public DiscordConfiguration DiscordConfiguration
+    public IDiscordConfiguration DiscordConfiguration
     {
         get => _configuration.GetSection("Discord").Get<DiscordConfiguration>() ?? new DiscordConfiguration();
     }
 
     /// <inheritdoc />
-    public VirtualParadiseConfiguration VirtualParadiseConfiguration
+    public IVirtualParadiseConfiguration VirtualParadiseConfiguration
     {
         get => _configuration.GetSection("VirtualParadise").Get<VirtualParadiseConfiguration>() ??
                new VirtualParadiseConfiguration();

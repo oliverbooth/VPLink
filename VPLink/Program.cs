@@ -6,6 +6,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Tomlyn.Extensions.Configuration;
+using VPLink.Common.Services;
 using VPLink.Services;
 using VpSharp;
 using X10D.Hosting.DependencyInjection;

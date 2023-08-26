@@ -1,6 +1,6 @@
-using VPLink.Data;
+using VPLink.Common.Data;
 
-namespace VPLink.Services;
+namespace VPLink.Common.Services;
 
 /// <summary>
 ///     Represents an object that can be used as a relay target.

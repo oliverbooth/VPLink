@@ -1,4 +1,4 @@
-namespace VPLink.Data;
+namespace VPLink.Common.Data;
 
 /// <summary>
 ///     Represents a message that is relayed between Discord and Virtual Paradise.

@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using VPLink.Common.Services;
 using VpSharp.Extensions;
 
 namespace VPLink.Services;
