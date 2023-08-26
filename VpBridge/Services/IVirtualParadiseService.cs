@@ -1,4 +1,4 @@
-﻿using Discord;
+using Discord;
 using VpSharp.Entities;
 
 namespace VpBridge.Services;
