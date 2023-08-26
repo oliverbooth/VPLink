@@ -1,11 +1,12 @@
-﻿using Discord;
+using Discord;
+using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Tomlyn.Extensions.Configuration;
-using VpBridge.Services;
+using VPLink.Services;
 using VpSharp;
 using X10D.Hosting.DependencyInjection;
 
@@ -24,13 +25,21 @@ builder.Logging.ClearProviders();
 builder.Logging.AddSerilog();
 
 builder.Services.AddSingleton<VirtualParadiseClient>();
-builder.Services.AddSingleton(new DiscordSocketClient(new DiscordSocketConfig
+builder.Services.AddSingleton<IConfigurationService, ConfigurationService>();
+
+builder.Services.AddSingleton<InteractionService>();
+builder.Services.AddSingleton<DiscordSocketClient>();
+builder.Services.AddSingleton(new DiscordSocketConfig
 {
     GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.MessageContent
-}));
+});
 
-builder.Services.AddHostedSingleton<IVirtualParadiseService, VirtualParadiseService>();
-builder.Services.AddHostedSingleton<IDiscordService, DiscordService>();
+builder.Services.AddHostedSingleton<IAvatarService, AvatarService>();
+builder.Services.AddHostedSingleton<IDiscordMessageService, DiscordMessageService>();
+builder.Services.AddHostedSingleton<IVirtualParadiseMessageService, VirtualParadiseMessageService>();
+
+builder.Services.AddHostedSingleton<DiscordService>();
+builder.Services.AddHostedSingleton<VirtualParadiseService>();
 builder.Services.AddHostedSingleton<RelayService>();
 
 await builder.Build().RunAsync();
