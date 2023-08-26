@@ -54,10 +54,7 @@ internal sealed partial class DiscordMessageService : BackgroundService, IDiscor
 
         var embed = new EmbedBuilder();
         embed.WithColor(0x00FF00);
-        embed.WithTitle("📥 Avatar Joined");
-        embed.WithDescription(avatar.Name);
-        embed.WithTimestamp(DateTimeOffset.UtcNow);
-        embed.WithFooter($"Session {avatar.Session}");
+        embed.WithDescription($"📥 **Avatar Joined**: {avatar.Name} (User #{avatar.User.Id})");
 
         return channel.SendMessageAsync(embed: embed.Build());
     }
@@ -70,10 +67,7 @@ internal sealed partial class DiscordMessageService : BackgroundService, IDiscor
 
         var embed = new EmbedBuilder();
         embed.WithColor(0xFF0000);
-        embed.WithTitle("📤 Avatar Left");
-        embed.WithDescription(avatar.Name);
-        embed.WithTimestamp(DateTimeOffset.UtcNow);
-        embed.WithFooter($"Session {avatar.Session}");
+        embed.WithDescription($"📤 **Avatar Left**: {avatar.Name} (User #{avatar.User.Id})");
 
         return channel.SendMessageAsync(embed: embed.Build());
     }
