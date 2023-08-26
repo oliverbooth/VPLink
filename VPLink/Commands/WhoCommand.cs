@@ -41,12 +41,12 @@ internal sealed class WhoCommand : InteractionModuleBase<SocketInteractionContex
         {
             if (avatar.IsBot)
             {
-                botsBuilder.AppendLine($"* {avatar.Name} ({avatar.Session})");
+                botsBuilder.AppendLine($"* {avatar.Name} ({avatar.User.Id})");
                 botCount++;
             }
             else
             {
-                userBuilder.AppendLine($"* {avatar.Name} ({avatar.Session})");
+                userBuilder.AppendLine($"* {avatar.Name} ({avatar.User.Id})");
                 userCount++;
             }
         }
