@@ -119,6 +119,7 @@ internal sealed partial class DiscordMessageService : BackgroundService, IDiscor
             content = $"{content}\n{builder}";
         }
 
+        content = content.Trim();
         _logger.LogInformation("Message by {Author}: {Content}", author, content);
 
         Span<byte> buffer = stackalloc byte[255]; // VP message length limit
