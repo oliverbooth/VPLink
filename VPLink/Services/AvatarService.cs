@@ -49,7 +49,7 @@ internal sealed class AvatarService : BackgroundService, IAvatarService
 
     private void OnVPAvatarJoined(VirtualParadiseAvatar avatar)
     {
-        _logger.LogInformation("{Avatar} joined", avatar);
+        _logger.LogInformation("{Avatar} joined ({User})", avatar, avatar.User);
 
         IBotConfiguration configuration = _configurationService.BotConfiguration;
         if (!configuration.AnnounceAvatarEvents || avatar.IsBot && !configuration.AnnounceBots)
@@ -60,7 +60,7 @@ internal sealed class AvatarService : BackgroundService, IAvatarService
 
     private void OnVPAvatarLeft(VirtualParadiseAvatar avatar)
     {
-        _logger.LogInformation("{Avatar} left", avatar);
+        _logger.LogInformation("{Avatar} left ({User})", avatar, avatar.User);
 
         IBotConfiguration configuration = _configurationService.BotConfiguration;
         if (!configuration.AnnounceAvatarEvents || avatar.IsBot && !configuration.AnnounceBots)
