@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VpBridge", "VpBridge\VpBridge.csproj", "{CD488A1E-0232-4EB5-A381-38A42B267B11}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VPLink", "VPLink\VPLink.csproj", "{CD488A1E-0232-4EB5-A381-38A42B267B11}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

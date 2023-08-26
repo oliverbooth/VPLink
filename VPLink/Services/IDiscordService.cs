@@ -1,7 +1,7 @@
 using Discord;
 using VpSharp.Entities;
 
-namespace VpBridge.Services;
+namespace VPLink.Services;
 
 /// <summary>
 ///     Represents a service that sends messages to the Discord channel.

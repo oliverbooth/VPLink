@@ -8,7 +8,7 @@ using VpSharp;
 using VpSharp.Entities;
 using Color = System.Drawing.Color;
 
-namespace VpBridge.Services;
+namespace VPLink.Services;
 
 /// <inheritdoc cref="IVirtualParadiseService" />
 internal sealed class VirtualParadiseService : BackgroundService, IVirtualParadiseService

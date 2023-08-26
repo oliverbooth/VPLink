@@ -4,7 +4,7 @@ using Discord.Interactions;
 using VpSharp;
 using VpSharp.Entities;
 
-namespace VpBridge.Commands;
+namespace VPLink.Commands;
 
 /// <summary>
 ///     Represents a class which implements the <c>who</c> command.

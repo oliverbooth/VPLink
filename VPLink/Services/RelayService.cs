@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 using VpSharp;
 using VpSharp.Extensions;
 
-namespace VpBridge.Services;
+namespace VPLink.Services;
 
 internal sealed class RelayService : BackgroundService
 {

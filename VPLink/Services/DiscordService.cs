@@ -8,11 +8,11 @@ using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using VpBridge.Commands;
+using VPLink.Commands;
 using VpSharp;
 using VpSharp.Entities;
 
-namespace VpBridge.Services;
+namespace VPLink.Services;
 
 /// <inheritdoc cref="IDiscordService" />
 internal sealed partial class DiscordService : BackgroundService, IDiscordService
