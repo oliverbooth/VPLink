@@ -35,8 +35,7 @@ public struct PlainTextMessageBuilder : IDisposable
     /// <param name="timestamp">The timestamp.</param>
     /// <param name="format">The format.</param>
     /// <param name="whitespace">The trailing whitespace trivia.</param>
-    public void AddTimestamp(DateTimeOffset timestamp, TimestampFormat format = TimestampFormat.None,
-        char whitespace = ' ')
+    public void AddTimestamp(DateTimeOffset timestamp, TimestampFormat format, char whitespace = ' ')
     {
         switch (format)
         {
