@@ -78,9 +78,15 @@ public static class MentionUtility
         using Utf8ValueStringBuilder buffer = ZString.CreateUtf8StringBuilder();
         var formatSpecifier = '\0';
         var isEscaped = false;
+        var breakLoop = false;
 
         for (var index = 2; index < contents.Length; index++)
         {
+            if (breakLoop)
+            {
+                break;
+            }
+
             char current = contents[index];
             switch (current)
             {
@@ -90,6 +96,8 @@ public static class MentionUtility
 
                 case ':' when !isEscaped && index + 1 < contents.Length:
                     formatSpecifier = contents[index + 1];
+                    if (formatSpecifier == '>') formatSpecifier = '\0'; // ignore closing tag
+                    breakLoop = true;
                     break;
 
                 case '>' when !isEscaped:
