@@ -119,6 +119,13 @@ internal sealed class DiscordMessageService : BackgroundService, IDiscordMessage
             }
         }
 
+        if (arg.Interaction is { Type: InteractionType.ApplicationCommand } interaction)
+        {
+            string name = interaction.User.GetDisplayName();
+            string commandName = interaction.Name;
+            messages.Add(new RelayedMessage(null, $"⌨️ {name} used /{commandName}", true));
+        }
+
         AddMessage(messages, displayName, content);
 
         IReadOnlyCollection<IAttachment> attachments = message.Attachments;
