@@ -15,11 +15,13 @@ public static class UserExtensions
     /// <exception cref="ArgumentNullException"><paramref name="user" /> is <c>null</c>.</exception>
     public static string GetDisplayName(this IUser user)
     {
-        return user switch
+        string displayName = user switch
         {
             null => throw new ArgumentNullException(nameof(user)),
             IGuildUser member => member.Nickname ?? member.GlobalName ?? member.Username,
             _ => user.GlobalName ?? user.Username
         };
+        
+        return user.IsBot ? $"[{displayName}]" : displayName;
     }
 }
