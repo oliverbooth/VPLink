@@ -96,6 +96,9 @@ internal sealed class DiscordMessageService : BackgroundService, IDiscordMessage
         SanitizeContent(guild, message.Content, ref builder);
         var content = builder.ToString();
 
+        Span<byte> testSpan = stackalloc byte[Utf8Encoding.GetByteCount(content)];
+        Utf8Encoding.GetBytes(content, testSpan);
+
         _logger.LogInformation("Message by {Author}: {Content}", author, content);
 
         var messages = new List<RelayedMessage>();
@@ -141,14 +144,16 @@ internal sealed class DiscordMessageService : BackgroundService, IDiscordMessage
 
     private static void AddMessage(ICollection<RelayedMessage> messages, string displayName, string content)
     {
-        Span<byte> buffer = stackalloc byte[255]; // VP message length limit
         int byteCount = Utf8Encoding.GetByteCount(content);
+        Span<byte> buffer = stackalloc byte[byteCount];
+        Utf8Encoding.GetBytes(content, buffer);
+
         var offset = 0;
         while (offset < byteCount)
         {
-            int length = Math.Min(byteCount - offset, 255);
-            Utf8Encoding.GetBytes(content.AsSpan(offset, length), buffer);
-            messages.Add(new RelayedMessage(displayName, Utf8Encoding.GetString(buffer), false));
+            int length = Math.Min(byteCount - offset, 255); // VP message length limit
+            Span<byte> slice = buffer.Slice(offset, length);
+            messages.Add(new RelayedMessage(displayName, Utf8Encoding.GetString(slice), false));
             offset += length;
         }
     }
@@ -199,6 +204,8 @@ internal sealed class DiscordMessageService : BackgroundService, IDiscordMessage
     {
         Utf8ValueStringBuilder wordBuffer = ZString.CreateUtf8StringBuilder();
 
+        Span<char> chars = stackalloc char[2];
+        Span<byte> bytes = stackalloc byte[4];
         for (var index = 0; index < content.Length; index++)
         {
             char current = content[index];
@@ -206,6 +213,13 @@ internal sealed class DiscordMessageService : BackgroundService, IDiscordMessage
             {
                 AddWord(guild, ref builder, ref wordBuffer, current);
                 wordBuffer.Clear();
+            }
+            else if (char.IsSurrogate(current))
+            {
+                content.Slice(index++, 2).CopyTo(chars);
+                int byteCount = Utf8Encoding.GetByteCount(chars);
+                Utf8Encoding.GetBytes(chars, bytes);
+                wordBuffer.AppendLiteral(bytes[..byteCount]);
             }
             else
             {
@@ -254,6 +268,10 @@ internal sealed class DiscordMessageService : BackgroundService, IDiscordMessage
                     int tagLength = ConsumeToEndOfTag(chars, ref index, temp);
                     char whitespace = index < chars.Length - 1 && char.IsWhiteSpace(chars[index]) ? chars[index] : '\0';
                     MentionUtility.ParseTag(guild, temp[..tagLength], ref builder, whitespace);
+                    break;
+
+                case var _ when char.IsSurrogate(current):
+                    buffer.Append(chars.Slice(index++, 2));
                     break;
 
                 default:
