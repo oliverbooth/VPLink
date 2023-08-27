@@ -46,17 +46,17 @@ public struct PlainTextMessageBuilder : IDisposable
 
             case TimestampFormat.None:
                 AddWord(timestamp.ToString("d MMM yyyy HH:mm"));
-                AddWord(" UTC", whitespace);
+                AddWord("UTC", whitespace);
                 break;
 
             case TimestampFormat.LongDate:
                 AddWord(timestamp.ToString("dd MMMM yyyy"));
-                AddWord(" UTC", whitespace);
+                AddWord("UTC", whitespace);
                 break;
 
             case TimestampFormat.ShortDate:
                 AddWord(timestamp.ToString("dd/MM/yyyy"));
-                AddWord(" UTC", whitespace);
+                AddWord("UTC", whitespace);
                 break;
 
             case TimestampFormat.ShortTime:
@@ -66,17 +66,17 @@ public struct PlainTextMessageBuilder : IDisposable
 
             case TimestampFormat.LongTime:
                 AddWord(timestamp.ToString("HH:mm:ss"));
-                AddWord(" UTC", whitespace);
+                AddWord("UTC", whitespace);
                 break;
 
             case TimestampFormat.ShortDateTime:
                 AddWord(timestamp.ToString("dd MMMM yyyy HH:mm"));
-                AddWord(" UTC", whitespace);
+                AddWord("UTC", whitespace);
                 break;
 
             case TimestampFormat.LongDateTime:
                 AddWord(timestamp.ToString("dddd, dd MMMM yyyy HH:mm"));
-                AddWord(" UTC", whitespace);
+                AddWord("UTC", whitespace);
                 break;
 
             default:
