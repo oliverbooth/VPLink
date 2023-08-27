@@ -40,7 +40,7 @@ public class RelayTests
         const string author = "Admin";
         const string message = "Hello, world!";
 
-        _vpMessageReceived.OnNext(new RelayedMessage(author, message));
+        _vpMessageReceived.OnNext(new RelayedMessage(author, message, false));
 
         observer.Received(1).OnNext(Arg.Is<RelayedMessage>(m => m.Author == author && m.Content == message));
         _discordMessageService.Received(1)
@@ -56,7 +56,7 @@ public class RelayTests
         const string author = "Admin";
         const string message = "Hello, world!";
 
-        _discordMessageReceived.OnNext(new RelayedMessage(author, message));
+        _discordMessageReceived.OnNext(new RelayedMessage(author, message, false));
 
         observer.Received(1).OnNext(Arg.Is<RelayedMessage>(m => m.Author == author && m.Content == message));
         _vpMessageService.Received(1).SendMessageAsync(Arg.Is<RelayedMessage>(m => m.Author == author && m.Content == message));
