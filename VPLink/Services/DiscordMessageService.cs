@@ -7,6 +7,7 @@ using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using VPLink.Common;
 using VPLink.Common.Configuration;
 using VPLink.Common.Data;
 using VPLink.Common.Services;
@@ -15,7 +16,7 @@ using VpSharp.Entities;
 namespace VPLink.Services;
 
 /// <inheritdoc cref="IDiscordMessageService" />
-internal sealed partial class DiscordMessageService : BackgroundService, IDiscordMessageService
+internal sealed class DiscordMessageService : BackgroundService, IDiscordMessageService
 {
     private static readonly Encoding Utf8Encoding = new UTF8Encoding(false, false);
 
@@ -88,22 +89,12 @@ internal sealed partial class DiscordMessageService : BackgroundService, IDiscor
             return Task.CompletedTask;
 
         string displayName = author.Nickname ?? author.GlobalName ?? author.Username;
-        string content = message.Content;
+        var builder = new PlainTextMessageBuilder();
+        Utf8ValueStringBuilder wordBuffer = ZString.CreateUtf8StringBuilder();
 
-        IReadOnlyCollection<IAttachment> attachments = message.Attachments;
-        if (attachments.Count > 0)
-        {
-            using Utf8ValueStringBuilder builder = ZString.CreateUtf8StringBuilder();
-            for (var index = 0; index < attachments.Count; index++)
-            {
-                builder.AppendLine(attachments.ElementAt(index).Url);
-            }
+        SanitizeContent(author.Guild, message.Content, ref builder, ref wordBuffer);
+        var content = builder.ToString();
 
-            // += allocates more than necessary, just interpolate
-            content = $"{content}\n{builder}";
-        }
-
-        content = content.Trim();
         _logger.LogInformation("Message by {Author}: {Content}", author, content);
 
         Span<byte> buffer = stackalloc byte[255]; // VP message length limit
@@ -119,8 +110,89 @@ internal sealed partial class DiscordMessageService : BackgroundService, IDiscor
             offset += length;
         }
 
+        IReadOnlyCollection<IAttachment> attachments = message.Attachments;
+        foreach (IAttachment attachment in attachments)
+        {
+            messages.Add(new RelayedMessage(displayName, attachment.Url));
+        }
+
         messages.ForEach(_messageReceived.OnNext);
+        builder.Dispose();
+        wordBuffer.Dispose();
         return Task.CompletedTask;
+    }
+
+    private static void SanitizeContent(IGuild guild,
+        ReadOnlySpan<char> content,
+        ref PlainTextMessageBuilder builder,
+        ref Utf8ValueStringBuilder wordBuffer)
+    {
+        for (var index = 0; index < content.Length; index++)
+        {
+            char current = content[index];
+            if (char.IsWhiteSpace(current))
+            {
+                AddWord(guild, ref builder, ref wordBuffer, current);
+                wordBuffer.Clear();
+            }
+            else
+            {
+                wordBuffer.Append(current);
+            }
+        }
+
+        if (wordBuffer.Length > 0)
+        {
+            AddWord(guild, ref builder, ref wordBuffer, '\0');
+        }
+    }
+
+    private static void AddWord(IGuild guild,
+        ref PlainTextMessageBuilder builder,
+        ref Utf8ValueStringBuilder wordBuffer,
+        char whitespaceTrivia)
+    {
+        using Utf8ValueStringBuilder buffer = ZString.CreateUtf8StringBuilder();
+
+        ReadOnlySpan<byte> bytes = wordBuffer.AsSpan();
+        int charCount = Utf8Encoding.GetCharCount(bytes);
+        Span<char> chars = stackalloc char[charCount];
+        Utf8Encoding.GetChars(bytes, chars);
+
+        Span<char> temp = stackalloc char[255];
+
+        var isEscaped = false;
+        for (var index = 0; index < chars.Length; index++)
+        {
+            char current = chars[index];
+            switch (current)
+            {
+                case '\\' when isEscaped:
+                    buffer.Append('\\');
+                    break;
+
+                case '\\':
+                    isEscaped = !isEscaped;
+                    break;
+
+                case '<':
+                    index++;
+                    int tagLength = ConsumeToEndOfTag(chars, ref index, temp);
+                    char whitespace = index < chars.Length - 1 && char.IsWhiteSpace(chars[index]) ? chars[index] : '\0';
+                    MentionUtility.ParseTag(guild, temp[..tagLength], ref builder, whitespace);
+                    break;
+
+                default:
+                    buffer.Append(current);
+                    break;
+            }
+        }
+
+        bytes = buffer.AsSpan();
+        charCount = Utf8Encoding.GetCharCount(bytes);
+        chars = stackalloc char[charCount];
+        Utf8Encoding.GetChars(bytes, chars);
+        builder.AddWord(chars, whitespaceTrivia);
     }
 
     private bool TryGetRelayChannel([NotNullWhen(true)] out ITextChannel? channel)
@@ -186,5 +258,38 @@ internal sealed partial class DiscordMessageService : BackgroundService, IDiscor
         }
 
         return true;
+    }
+
+    private static int ConsumeToEndOfTag(ReadOnlySpan<char> word, ref int index, Span<char> element)
+    {
+        using Utf8ValueStringBuilder builder = ZString.CreateUtf8StringBuilder();
+        var isEscaped = false;
+
+        int startIndex = index;
+        for (; index < word.Length; index++)
+        {
+            switch (word[index])
+            {
+                case '\\' when isEscaped:
+                    builder.Append('\\');
+                    isEscaped = false;
+                    break;
+
+                case '\\':
+                    isEscaped = true;
+                    break;
+
+                case '>' when !isEscaped:
+                    Utf8Encoding.GetChars(builder.AsSpan(), element);
+                    return index + 1 - startIndex;
+
+                default:
+                    builder.Append(word[index]);
+                    break;
+            }
+        }
+
+        Utf8Encoding.GetChars(builder.AsSpan(), element);
+        return index + 1 - startIndex;
     }
 }
