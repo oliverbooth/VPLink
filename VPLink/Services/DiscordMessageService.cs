@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using VPLink.Common;
 using VPLink.Common.Configuration;
 using VPLink.Common.Data;
+using VPLink.Common.Extensions;
 using VPLink.Common.Services;
 using VpSharp.Entities;
 
@@ -88,45 +89,106 @@ internal sealed class DiscordMessageService : BackgroundService, IDiscordMessage
         if (!ValidateMessage(arg, out IUserMessage? message, out IGuildUser? author))
             return Task.CompletedTask;
 
-        string displayName = author.Nickname ?? author.GlobalName ?? author.Username;
+        string displayName = author.GetDisplayName();
         var builder = new PlainTextMessageBuilder();
-        Utf8ValueStringBuilder wordBuffer = ZString.CreateUtf8StringBuilder();
 
-        SanitizeContent(author.Guild, message.Content, ref builder, ref wordBuffer);
+        IGuild guild = author.Guild;
+        SanitizeContent(guild, message.Content, ref builder);
         var content = builder.ToString();
 
         _logger.LogInformation("Message by {Author}: {Content}", author, content);
 
-        Span<byte> buffer = stackalloc byte[255]; // VP message length limit
         var messages = new List<RelayedMessage>();
-        int byteCount = Utf8Encoding.GetByteCount(content);
 
+        MessageReference reference = arg.Reference;
+        if (reference?.MessageId.IsSpecified == true)
+        {
+            string? replyContent = GetReplyContent(arg, reference, out IUserMessage? fetchedMessage);
+            if (replyContent is not null)
+            {
+                IUser replyAuthor = fetchedMessage!.Author;
+                _logger.LogInformation("Replying to {Author}: {Content}", replyAuthor, replyContent);
+                builder.Clear();
+                SanitizeContent(guild, replyContent, ref builder);
+                replyContent = builder.ToString();
+                messages.Add(new RelayedMessage(null!, $"↩️ Replying to {fetchedMessage.Author.GetDisplayName()}:", true));
+                messages.Add(new RelayedMessage(null!, replyContent, true));
+            }
+        }
+
+        AddMessage(messages, displayName, content);
+
+        IReadOnlyCollection<IAttachment> attachments = message.Attachments;
+        foreach (IAttachment attachment in attachments)
+        {
+            messages.Add(new RelayedMessage(displayName, attachment.Url, false));
+        }
+
+        messages.ForEach(_messageReceived.OnNext);
+        builder.Dispose();
+        return Task.CompletedTask;
+    }
+
+    private static void AddMessage(ICollection<RelayedMessage> messages, string displayName, string content)
+    {
+        Span<byte> buffer = stackalloc byte[255]; // VP message length limit
+        int byteCount = Utf8Encoding.GetByteCount(content);
         var offset = 0;
         while (offset < byteCount)
         {
             int length = Math.Min(byteCount - offset, 255);
             Utf8Encoding.GetBytes(content.AsSpan(offset, length), buffer);
-            messages.Add(new RelayedMessage(displayName, Utf8Encoding.GetString(buffer)));
+            messages.Add(new RelayedMessage(displayName, Utf8Encoding.GetString(buffer), false));
             offset += length;
         }
-
-        IReadOnlyCollection<IAttachment> attachments = message.Attachments;
-        foreach (IAttachment attachment in attachments)
-        {
-            messages.Add(new RelayedMessage(displayName, attachment.Url));
-        }
-
-        messages.ForEach(_messageReceived.OnNext);
-        builder.Dispose();
-        wordBuffer.Dispose();
-        return Task.CompletedTask;
     }
 
-    private static void SanitizeContent(IGuild guild,
-        ReadOnlySpan<char> content,
-        ref PlainTextMessageBuilder builder,
-        ref Utf8ValueStringBuilder wordBuffer)
+    private string? GetReplyContent(SocketMessage message, MessageReference reference, out IUserMessage? fetchedMessage)
     {
+        fetchedMessage = null;
+        IGuild authorGuild = ((IGuildUser)message.Author).Guild;
+        IGuild guild = authorGuild;
+
+        Optional<ulong> referenceGuildId = reference.GuildId;
+        Optional<ulong> referenceMessageId = reference.MessageId;
+
+        if (!referenceMessageId.IsSpecified)
+        {
+            return null;
+        }
+
+        if (referenceGuildId.IsSpecified)
+        {
+            guild = _discordClient.GetGuild(referenceGuildId.Value) ?? authorGuild;
+        }
+
+        ulong referenceChannelId = reference.ChannelId;
+
+        if (!referenceMessageId.IsSpecified)
+        {
+            return null;
+        }
+
+        if (guild.GetChannelAsync(referenceChannelId).GetAwaiter().GetResult() is not ITextChannel channel)
+        {
+            return null;
+        }
+
+        IMessage? referencedMessage = channel.GetMessageAsync(referenceMessageId.Value).GetAwaiter().GetResult();
+        if (referencedMessage is null)
+        {
+            return null;
+        }
+
+        fetchedMessage = referencedMessage as IUserMessage;
+        string? content = referencedMessage.Content;
+        return string.IsNullOrWhiteSpace(content) ? null : content;
+    }
+
+    private static void SanitizeContent(IGuild guild, ReadOnlySpan<char> content, ref PlainTextMessageBuilder builder)
+    {
+        Utf8ValueStringBuilder wordBuffer = ZString.CreateUtf8StringBuilder();
+
         for (var index = 0; index < content.Length; index++)
         {
             char current = content[index];
@@ -145,6 +207,8 @@ internal sealed class DiscordMessageService : BackgroundService, IDiscordMessage
         {
             AddWord(guild, ref builder, ref wordBuffer, '\0');
         }
+
+        wordBuffer.Dispose();
     }
 
     private static void AddWord(IGuild guild,

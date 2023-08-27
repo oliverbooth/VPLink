@@ -85,6 +85,14 @@ public struct PlainTextMessageBuilder : IDisposable
         }
     }
 
+    /// <summary>
+    ///     Clears the builder.
+    /// </summary>
+    public void Clear()
+    {
+        _builder.Clear();
+    }
+
     /// <inheritdoc />
     public void Dispose()
     {

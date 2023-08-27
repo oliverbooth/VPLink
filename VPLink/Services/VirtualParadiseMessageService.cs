@@ -45,8 +45,8 @@ internal sealed class VirtualParadiseMessageService : BackgroundService, IVirtua
     {
         IChatConfiguration configuration = _configurationService.VirtualParadiseConfiguration.Chat;
 
-        Color color = Color.FromArgb((int)configuration.Color);
-        FontStyle style = configuration.Style;
+        Color color = Color.FromArgb((int)(message.IsReply ? configuration.ReplyColor : configuration.Color));
+        FontStyle style = message.IsReply ? configuration.ReplyStyle : configuration.Style;
 
         string content = Format.StripMarkDown(message.Content);
         return _virtualParadiseClient.SendMessageAsync(message.Author, content, style, color);
@@ -68,7 +68,7 @@ internal sealed class VirtualParadiseMessageService : BackgroundService, IVirtua
 
         _logger.LogInformation("Message by {Author}: {Content}", message.Author, message.Content);
 
-        var relayedMessage = new RelayedMessage(message.Author.Name, message.Content);
+        var relayedMessage = new RelayedMessage(message.Author.Name, message.Content, false);
         _messageReceived.OnNext(relayedMessage);
     }
 }

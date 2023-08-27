@@ -10,11 +10,19 @@ public readonly struct RelayedMessage
     /// </summary>
     /// <param name="author">The author.</param>
     /// <param name="content">The content.</param>
-    public RelayedMessage(string author, string content)
+    /// <param name="isReply">A value indicating whether this message is a reply.</param>
+    public RelayedMessage(string? author, string content, bool isReply)
     {
         Author = author;
         Content = content;
+        IsReply = isReply;
     }
+
+    /// <summary>
+    ///     Gets the user that sent the message.
+    /// </summary>
+    /// <value>The user that sent the message.</value>
+    public string? Author { get; }
 
     /// <summary>
     ///     Gets the message content.
@@ -23,8 +31,8 @@ public readonly struct RelayedMessage
     public string Content { get; }
 
     /// <summary>
-    ///     Gets the user that sent the message.
+    ///     Gets a value indicating whether this message is a reply.
     /// </summary>
-    /// <value>The user that sent the message.</value>
-    public string Author { get; }
+    /// <value><see langword="true" /> if this message is a reply; otherwise, <see langword="false" />.</value>
+    public bool IsReply { get; }
 }
