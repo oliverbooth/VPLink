@@ -1,5 +1,4 @@
 using Cysharp.Text;
-using Humanizer;
 
 namespace VPLink.Common.Data;
 
@@ -35,13 +34,12 @@ public struct PlainTextMessageBuilder : IDisposable
     /// <param name="timestamp">The timestamp.</param>
     /// <param name="format">The format.</param>
     /// <param name="whitespace">The trailing whitespace trivia.</param>
-    public void AddTimestamp(DateTimeOffset timestamp, TimestampFormat format = TimestampFormat.None,
-        char whitespace = ' ')
+    public void AddTimestamp(DateTimeOffset timestamp, TimestampFormat format, char whitespace = ' ')
     {
         switch (format)
         {
             case TimestampFormat.Relative:
-                AddWord(timestamp.Humanize(), whitespace);
+                AddWord(FormatRelativeTime(timestamp), whitespace);
                 break;
 
             case TimestampFormat.None:
@@ -103,5 +101,54 @@ public struct PlainTextMessageBuilder : IDisposable
     public override string ToString()
     {
         return _builder.ToString().Trim();
+    }
+
+    private static string FormatRelativeTime(DateTimeOffset targetTime)
+    {
+        TimeSpan timeDifference = DateTimeOffset.Now - targetTime;
+        bool isFuture = timeDifference.TotalMilliseconds < 0;
+        int value;
+        string unit;
+
+        timeDifference = TimeSpan.FromMilliseconds(Math.Abs(timeDifference.TotalMilliseconds));
+        switch (timeDifference.TotalDays)
+        {
+            case >= 365:
+                unit = "year";
+                value = (int)(timeDifference.TotalDays / 365);
+                break;
+
+            case >= 30:
+                unit = "month";
+                value = (int)(timeDifference.TotalDays / 30);
+                break;
+
+            case >= 1:
+                unit = "day";
+                value = (int)timeDifference.TotalDays;
+                break;
+
+            default:
+                if (timeDifference.TotalHours >= 1)
+                {
+                    unit = "hour";
+                    value = (int)timeDifference.TotalHours;
+                }
+                else if (timeDifference.TotalMinutes >= 1)
+                {
+                    unit = "minute";
+                    value = (int)timeDifference.TotalMinutes;
+                }
+                else
+                {
+                    unit = "second";
+                    value = (int)timeDifference.TotalSeconds;
+                }
+
+                break;
+        }
+
+        string suffix = value > 1 ? "s" : "";
+        return isFuture ? $"in {value} {unit}{suffix}" : $"{value} {unit}{suffix} ago";
     }
 }
