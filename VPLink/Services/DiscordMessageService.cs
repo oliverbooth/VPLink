@@ -107,11 +107,14 @@ internal sealed class DiscordMessageService : BackgroundService, IDiscordMessage
             if (replyContent is not null)
             {
                 IUser replyAuthor = fetchedMessage!.Author;
+                string name = fetchedMessage.Author.GetDisplayName();
+
                 _logger.LogInformation("Replying to {Author}: {Content}", replyAuthor, replyContent);
                 builder.Clear();
                 SanitizeContent(guild, replyContent, ref builder);
                 replyContent = builder.ToString();
-                messages.Add(new RelayedMessage(null!, $"↩️ Replying to {fetchedMessage.Author.GetDisplayName()}:", true));
+
+                messages.Add(new RelayedMessage(null!, $"↩️ Replying to {name}:", true));
                 messages.Add(new RelayedMessage(null!, replyContent, true));
             }
         }
