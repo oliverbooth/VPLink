@@ -24,6 +24,11 @@ public static class MentionUtility
         else
             switch (contents[0])
             {
+                // custom emote
+                case ':':
+                    ParseCustomEmote(contents, ref builder, whitespaceTrivia);
+                    break;
+
                 // user mention
                 case '@':
                     ParseUserMention(guild, contents, ref builder, whitespaceTrivia);
@@ -69,6 +74,15 @@ public static class MentionUtility
         IGuildUser? user = guild.GetUserAsync(userId).GetAwaiter().GetResult();
         builder.AddWord(user is null ? $"<{contents}>" : $"@{user.Nickname ?? user.GlobalName ?? user.Username}",
             whitespaceTrivia);
+    }
+
+    private static void ParseCustomEmote(ReadOnlySpan<char> contents,
+        ref PlainTextMessageBuilder builder,
+        char whitespaceTrivia)
+    {
+        contents = contents[1..];
+        ReadOnlySpan<char> name = contents[..contents.IndexOf(':')];
+        builder.AddWord($":{name.ToString()}:", whitespaceTrivia);
     }
 
     private static void ParseTimestamp(ReadOnlySpan<char> contents,
