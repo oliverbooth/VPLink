@@ -25,6 +25,8 @@ builder.Configuration.AddTomlFile("data/config.toml", true, true);
 builder.Logging.ClearProviders();
 builder.Logging.AddSerilog();
 
+builder.Services.AddHostedSingleton<BotService>();
+
 builder.Services.AddSingleton<VirtualParadiseClient>();
 builder.Services.AddSingleton<IConfigurationService, ConfigurationService>();
 

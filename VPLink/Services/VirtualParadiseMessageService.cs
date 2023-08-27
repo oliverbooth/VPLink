@@ -1,6 +1,6 @@
-using System.Drawing;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using Discord;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using VPLink.Common.Configuration;
@@ -8,7 +8,9 @@ using VPLink.Common.Data;
 using VPLink.Common.Services;
 using VpSharp;
 using VpSharp.Entities;
+using Color = System.Drawing.Color;
 using FontStyle = VpSharp.FontStyle;
+using MessageType = VpSharp.MessageType;
 
 namespace VPLink.Services;
 
@@ -43,9 +45,11 @@ internal sealed class VirtualParadiseMessageService : BackgroundService, IVirtua
     {
         IChatConfiguration configuration = _configurationService.VirtualParadiseConfiguration.Chat;
 
-        Color color = Color.FromArgb((int)configuration.Color);
-        FontStyle style = configuration.Style;
-        return _virtualParadiseClient.SendMessageAsync(message.Author, message.Content, style, color);
+        Color color = Color.FromArgb((int)(message.IsReply ? configuration.ReplyColor : configuration.Color));
+        FontStyle style = message.IsReply ? configuration.ReplyStyle : configuration.Style;
+
+        string content = Format.StripMarkDown(message.Content);
+        return _virtualParadiseClient.SendMessageAsync(message.Author, content, style, color);
     }
 
     /// <inheritdoc />
@@ -64,7 +68,7 @@ internal sealed class VirtualParadiseMessageService : BackgroundService, IVirtua
 
         _logger.LogInformation("Message by {Author}: {Content}", message.Author, message.Content);
 
-        var relayedMessage = new RelayedMessage(message.Author.Name, message.Content);
+        var relayedMessage = new RelayedMessage(message.Author.Name, message.Content, false);
         _messageReceived.OnNext(relayedMessage);
     }
 }

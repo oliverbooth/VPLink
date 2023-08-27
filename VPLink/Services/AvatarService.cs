@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using Microsoft.Extensions.Hosting;
@@ -17,6 +18,7 @@ internal sealed class AvatarService : BackgroundService, IAvatarService
     private readonly VirtualParadiseClient _virtualParadiseClient;
     private readonly Subject<VirtualParadiseAvatar> _avatarJoined = new();
     private readonly Subject<VirtualParadiseAvatar> _avatarLeft = new();
+    private readonly ConcurrentDictionary<int, VirtualParadiseAvatar> _cachedAvatars = new();
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="AvatarService" /> class.
@@ -49,23 +51,42 @@ internal sealed class AvatarService : BackgroundService, IAvatarService
 
     private void OnVPAvatarJoined(VirtualParadiseAvatar avatar)
     {
-        _logger.LogInformation("{Avatar} joined", avatar);
+        _logger.LogInformation("{Avatar} joined ({User})", avatar, avatar.User);
 
         IBotConfiguration configuration = _configurationService.BotConfiguration;
         if (!configuration.AnnounceAvatarEvents || avatar.IsBot && !configuration.AnnounceBots)
             return;
 
-        _avatarJoined.OnNext(avatar);
+        if (AddCachedAvatar(avatar))
+            _avatarJoined.OnNext(avatar);
     }
 
     private void OnVPAvatarLeft(VirtualParadiseAvatar avatar)
     {
-        _logger.LogInformation("{Avatar} left", avatar);
+        _logger.LogInformation("{Avatar} left ({User})", avatar, avatar.User);
 
         IBotConfiguration configuration = _configurationService.BotConfiguration;
         if (!configuration.AnnounceAvatarEvents || avatar.IsBot && !configuration.AnnounceBots)
             return;
 
-        _avatarLeft.OnNext(avatar);
+        if (RemoveCachedAvatar(avatar))
+            _avatarLeft.OnNext(avatar);
+    }
+
+    private bool AddCachedAvatar(VirtualParadiseAvatar avatar)
+    {
+        if (avatar is null) throw new ArgumentNullException(nameof(avatar));
+
+        bool result = !_cachedAvatars.Values.Any(a => a.User.Id == avatar.User.Id && a.Name == avatar.Name);
+        _cachedAvatars[avatar.Session] = avatar;
+        return result;
+    }
+
+    private bool RemoveCachedAvatar(VirtualParadiseAvatar avatar)
+    {
+        if (avatar is null) throw new ArgumentNullException(nameof(avatar));
+
+        _cachedAvatars.TryRemove(avatar.Session, out _);
+        return !_cachedAvatars.Values.Any(a => a.User.Id == avatar.User.Id && a.Name == avatar.Name);
     }
 }

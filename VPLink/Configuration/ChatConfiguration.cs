@@ -11,4 +11,10 @@ internal sealed class ChatConfiguration : IChatConfiguration
 
     /// <inheritdoc />
     public FontStyle Style { get; set; } = FontStyle.Regular;
+
+    /// <inheritdoc />
+    public uint ReplyColor { get; set; } = 0x808080;
+
+    /// <inheritdoc />
+    public FontStyle ReplyStyle { get; set; } = FontStyle.Italic;
 }

@@ -44,6 +44,7 @@ internal sealed class DiscordService : BackgroundService
         _logger.LogInformation("Establishing relay");
 
         _logger.LogInformation("Adding command modules");
+        await _interactionService.AddModuleAsync<InfoCommand>(_serviceProvider).ConfigureAwait(false);
         await _interactionService.AddModuleAsync<WhoCommand>(_serviceProvider).ConfigureAwait(false);
 
         _discordClient.Ready += OnReady;
