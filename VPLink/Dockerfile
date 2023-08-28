@@ -3,7 +3,7 @@ WORKDIR /app
 
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
-COPY ["VPLink.csproj", "VPLink/"]
+COPY ["VPLink/VPLink.csproj", "VPLink/"]
 RUN dotnet restore "VPLink/VPLink.csproj"
 COPY . .
 WORKDIR "/src/VPLink"
