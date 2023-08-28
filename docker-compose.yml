@@ -5,7 +5,7 @@ services:
     pull_policy: build
     build:
       context: .
-      dockerfile: VPLink/Dockerfile
+      dockerfile: Dockerfile
     volumes:
       - type: bind
         source: /var/log/vp/vplink
