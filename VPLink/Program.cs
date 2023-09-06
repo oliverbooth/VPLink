@@ -27,6 +27,7 @@ builder.Logging.AddSerilog();
 
 builder.Services.AddHostedSingleton<BotService>();
 
+builder.Services.AddSingleton(new VirtualParadiseConfiguration { AutoQuery = false });
 builder.Services.AddSingleton<VirtualParadiseClient>();
 builder.Services.AddSingleton<IConfigurationService, ConfigurationService>();
 
