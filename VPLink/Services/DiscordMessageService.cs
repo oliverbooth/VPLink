@@ -65,7 +65,10 @@ internal sealed class DiscordMessageService : BackgroundService, IDiscordMessage
 
         var embed = new EmbedBuilder();
         embed.WithColor(0xFF0000);
-        embed.WithDescription($"📤 **Avatar Left**: {avatar.Name} (User #{avatar.User.Id})");
+        if (avatar.User is { } user)
+            embed.WithDescription($"📤 **Avatar Left**: {avatar.Name} (User #{user.Id})");
+        else
+            embed.WithDescription($"📤 **Avatar Left**: {avatar.Name}");
 
         return channel.SendMessageAsync(embed: embed.Build());
     }
