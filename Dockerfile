@@ -14,8 +14,8 @@ RUN dotnet publish "VPLink.csproj" -c Release -o /app/publish
 
 FROM base AS vpsdk
 WORKDIR /vpsdk
-ADD http://static.virtualparadise.org/dev-downloads/vpsdk_20231217_422bcbfc_linux_debian10_x86_64.tar.gz ./vpsdk.tar.gz
-RUN echo "5F5710EEFC1FC2C5246434A52B9DC05F477A6EFE91394001FAA4097F5CA7BC77 vpsdk.tar.gz" | sha256sum -c -&& \
+ADD http://edwin-share.virtualparadise.org/2024/01/vpsdk_20240102_e6701b5e_linux_debian10_x86_64 ./vpsdk.tar.gz
+RUN echo "5784270749FFC3AD31EFF9BA7DD82203C31968C60DD732A4F76CBB2947C1DB6D vpsdk.tar.gz" | sha256sum -c -&& \
     tar xfv vpsdk.tar.gz --strip-components=1 && \
     rm -r vpsdk.tar.gz include
 
