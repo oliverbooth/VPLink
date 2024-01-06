@@ -43,6 +43,8 @@ internal sealed class VirtualParadiseMessageService : BackgroundService, IVirtua
     /// <inheritdoc />
     public Task SendMessageAsync(RelayedMessage message)
     {
+        if (_virtualParadiseClient.CurrentWorld is null) return Task.CompletedTask;
+
         IChatConfiguration configuration = _configurationService.VirtualParadiseConfiguration.Chat;
 
         Color color = Color.FromArgb((int)(message.IsReply ? configuration.ReplyColor : configuration.Color));
@@ -62,6 +64,7 @@ internal sealed class VirtualParadiseMessageService : BackgroundService, IVirtua
     private void OnVPMessageReceived(VirtualParadiseMessage message)
     {
         if (message is null) throw new ArgumentNullException(nameof(message));
+        if (_virtualParadiseClient.CurrentWorld is null) return;
         if (message.Type != MessageType.ChatMessage) return;
         if (message.Author == _virtualParadiseClient.CurrentAvatar) return;
         if (message.Author.IsBot && !_configurationService.BotConfiguration.RelayBotMessages) return;
