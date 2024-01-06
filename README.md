@@ -16,7 +16,7 @@ myself.
 ### Prerequisites
 
 - [Visual Studio 2022](https://visualstudio.microsoft.com/vs/) (or later)
-- [.NET 7.0 SDK](https://dotnet.microsoft.com/download/dotnet/7.0) (or later)
+- [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) (or later)
 - A [Virtual Paradise](https://www.virtualparadise.org/) user account
 - A [Discord](https://discord.com/) user account, and a bot application
 
