@@ -42,7 +42,7 @@
         <PackageReference Include="Serilog.Sinks.File" Version="5.0.0"/>
         <PackageReference Include="System.Reactive" Version="6.0.0"/>
         <PackageReference Include="Tomlyn.Extensions.Configuration" Version="1.0.5"/>
-        <PackageReference Include="VpSharp" Version="0.1.0-nightly.44"/>
+        <PackageReference Include="VpSharp" Version="1.0.0-nightly.45"/>
         <PackageReference Include="X10D" Version="3.3.1"/>
         <PackageReference Include="X10D.Hosting" Version="3.3.1"/>
         <PackageReference Include="ZString" Version="2.5.0"/>
