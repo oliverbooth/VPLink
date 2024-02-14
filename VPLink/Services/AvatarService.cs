@@ -63,6 +63,10 @@ internal sealed class AvatarService : BackgroundService, IAvatarService
 
     private void OnVPAvatarLeft(VirtualParadiseAvatar avatar)
     {
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+        if (avatar is null)
+            return;
+
         _logger.LogInformation("{Avatar} left ({User})", avatar, avatar.User);
 
         IBotConfiguration configuration = _configurationService.BotConfiguration;
