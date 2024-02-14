@@ -121,7 +121,7 @@ internal sealed class DiscordMessageService : BackgroundService, IDiscordMessage
                 replyContent = builder.ToString();
 
                 messages.Add(new RelayedMessage(null!, $"↩️ Replying to {name}:", true));
-                messages.Add(new RelayedMessage(null!, replyContent, true));
+                AddMessage(messages, null, replyContent, true);
             }
         }
 
@@ -137,7 +137,7 @@ internal sealed class DiscordMessageService : BackgroundService, IDiscordMessage
         IReadOnlyCollection<IAttachment> attachments = message.Attachments;
         foreach (IAttachment attachment in attachments)
         {
-            messages.Add(new RelayedMessage(displayName, attachment.Url, false));
+            AddMessage(messages, displayName, attachment.Url);
         }
 
         messages.ForEach(_messageReceived.OnNext);
@@ -145,7 +145,7 @@ internal sealed class DiscordMessageService : BackgroundService, IDiscordMessage
         return Task.CompletedTask;
     }
 
-    private static void AddMessage(ICollection<RelayedMessage> messages, string displayName, string content)
+    private static void AddMessage(ICollection<RelayedMessage> messages, string? displayName, string content, bool isReply = false)
     {
         int byteCount = Utf8Encoding.GetByteCount(content);
         Span<byte> buffer = stackalloc byte[byteCount];
@@ -156,7 +156,7 @@ internal sealed class DiscordMessageService : BackgroundService, IDiscordMessage
         {
             int length = Math.Min(byteCount - offset, 255); // VP message length limit
             Span<byte> slice = buffer.Slice(offset, length);
-            messages.Add(new RelayedMessage(displayName, Utf8Encoding.GetString(slice), false));
+            messages.Add(new RelayedMessage(displayName, Utf8Encoding.GetString(slice), isReply));
             offset += length;
         }
     }
