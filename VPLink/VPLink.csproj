@@ -9,7 +9,7 @@
         <Authors>Oliver Booth</Authors>
         <RepositoryUrl>https://github.com/oliverbooth/VpBridge</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
-        <VersionPrefix>2.0.2</VersionPrefix>
+        <VersionPrefix>2.0.3</VersionPrefix>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
