@@ -66,6 +66,7 @@ internal sealed class VirtualParadiseMessageService : BackgroundService, IVirtua
         if (message is null) throw new ArgumentNullException(nameof(message));
         if (_virtualParadiseClient.CurrentWorld is null) return;
         if (message.Type != MessageType.ChatMessage) return;
+        if (message.Author is null) return;
         if (message.Author == _virtualParadiseClient.CurrentAvatar) return;
         if (message.Author.IsBot && !_configurationService.BotConfiguration.RelayBotMessages) return;
 
