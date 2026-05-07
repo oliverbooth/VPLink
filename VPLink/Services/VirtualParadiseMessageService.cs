@@ -51,7 +51,8 @@ internal sealed class VirtualParadiseMessageService : BackgroundService, IVirtua
         FontStyle style = message.IsReply ? configuration.ReplyStyle : configuration.Style;
 
         string content = Format.StripMarkDown(message.Content);
-        return _virtualParadiseClient.SendMessageAsync(message.Author, content, style, color);
+        _virtualParadiseClient.SendMessage(message.Author, content, style, color);
+        return Task.CompletedTask;
     }
 
     /// <inheritdoc />

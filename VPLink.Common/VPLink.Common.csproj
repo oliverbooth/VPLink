@@ -9,7 +9,7 @@
     <ItemGroup>
         <PackageReference Include="Discord.Net" Version="3.13.0"/>
         <PackageReference Include="Humanizer.Core" Version="2.14.1"/>
-        <PackageReference Include="VpSharp" Version="0.1.0-nightly.43"/>
+        <PackageReference Include="VpSharp" Version="1.0.0-nightly.71" />
     </ItemGroup>
 
 </Project>
